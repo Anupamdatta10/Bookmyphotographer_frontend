@@ -72,7 +72,6 @@ export default function PhotographerDetailsClient() {
     eventDate: [],
     eventLocation: "",
     durationHours: "",
-    totalPrice: "",
     notes: "",
     specialRequirements: "",
   });
@@ -375,7 +374,6 @@ export default function PhotographerDetailsClient() {
             eventDate: bookingForm.eventDate.filter(Boolean),
             eventLocation: bookingForm.eventLocation,
             durationHours: bookingForm.durationHours,
-            totalPrice: bookingForm.totalPrice,
             notes: bookingForm.notes,
             specialRequirements: bookingForm.specialRequirements,
           }),
@@ -392,7 +390,6 @@ export default function PhotographerDetailsClient() {
           eventDate: [],
           eventLocation: "",
           durationHours: 4,
-          totalPrice: 600,
           notes: "",
           specialRequirements: "",
         });
@@ -1056,18 +1053,6 @@ export default function PhotographerDetailsClient() {
                                       onChange={(e) => setBookingForm((prev) => ({ ...prev, durationHours: parseInt(e.target.value) || 0 }))}
                                       min="1"
                                       max="24"
-                                      required
-                                    />
-                                  </div>
-
-                                  <div className={styles.modalField}>
-                                    <label htmlFor="totalPrice">Your budget (₹) *</label>
-                                    <input
-                                      type="number"
-                                      id="totalPrice"
-                                      value={bookingForm.totalPrice}
-                                      onChange={(e) => setBookingForm((prev) => ({ ...prev, totalPrice: parseInt(e.target.value) || 0 }))}
-                                      min="0"
                                       required
                                     />
                                   </div>
