@@ -58,6 +58,7 @@ const editableSections = [
     fields: [
       ["proffession", "Profession", "text"],
       ["specialties", "Specialties", "text"],
+      ["languages", "Languages", "text"],
       ["experienceYears", "Experience (years)", "number"],
       ["dob", "Date of birth", "date"],
       ["age", "Age", "computed"],
@@ -94,6 +95,7 @@ const profileSections = [
       ["status", "Status"],
       ["proffession", "Profession"],
       ["specialties", "Specialties"],
+      ["languages", "Languages"],
       ["experienceYears", "Experience"],
       ["dob", "Date of birth"],
       ["age", "Age"],
@@ -188,10 +190,9 @@ function getEditValue(profile, field) {
     );
     return matchingDistrict?.value ?? currentDistrict;
   }
-  if (field === "specialties") {
-    return Array.isArray(profile.specialties)
-      ? profile.specialties.join(", ")
-      : (profile.specialties ?? "");
+  if (field === "specialties" || field === "languages") {
+    const values = profile[field];
+    return Array.isArray(values) ? values.join(", ") : (values ?? "");
   }
   if (field === "dob")
     return profile.dob ? String(profile.dob).slice(0, 10) : "";
@@ -339,6 +340,7 @@ export default function ProfilePage() {
 
   const photographerId = profile?._id;
   const isPhotographer = profile?.type === "PHOTOGRAPHER";
+  const isPartner = profile?.type?.toUpperCase() === "PARTNER";
   const visibleEditableSections = isPhotographer
     ? editableSections
     : editableSections.filter((section) => section.title !== "Photographer profile");
@@ -633,6 +635,10 @@ export default function ProfilePage() {
       specialties: specialtyTags
         .map((tag) => tag.label.trim())
         .filter(Boolean),
+      languages: value("languages")
+        .split(",")
+        .map((language) => language.trim())
+        .filter(Boolean),
       experienceYears: experienceYears ? Number(experienceYears) : null,
       dob: value("dob") || null,
       bio: value("bio"),
@@ -641,14 +647,14 @@ export default function ProfilePage() {
     const payload = Object.fromEntries(
       Object.entries(nextValues).filter(([field, nextValue]) => {
         const currentValue = profile[field];
-        if (field === "specialties") {
-          const currentSpecialties = Array.isArray(currentValue)
+        if (field === "specialties" || field === "languages") {
+          const currentItems = Array.isArray(currentValue)
             ? currentValue
             : currentValue
               ? [currentValue]
               : [];
           return (
-            JSON.stringify(nextValue) !== JSON.stringify(currentSpecialties)
+            JSON.stringify(nextValue) !== JSON.stringify(currentItems)
           );
         }
         if (field === "dob") {
@@ -1669,9 +1675,11 @@ export default function ProfilePage() {
                   <p>{profile.type || "Member"}</p>
                   <span>{profile.email}</span>
                 </div>
-                <span className={styles.status}>
-                  {profile.status || "Account"}
-                </span>
+                {!isPartner && (
+                  <span className={styles.status}>
+                    {profile.status || "Account"}
+                  </span>
+                )}
               </section>
 
               <div

@@ -268,6 +268,9 @@ export default function PhotographerDetailsClient() {
   const specialties = Array.isArray(photographer?.specialties)
     ? photographer.specialties
     : [];
+  const languages = Array.isArray(photographer?.languages)
+    ? photographer.languages
+    : [];
   const occupiedDates = Array.isArray(photographer?.occupiedDates)
     ? photographer.occupiedDates
     : [];
@@ -456,6 +459,10 @@ export default function PhotographerDetailsClient() {
                   <p>
                     <b>Experience</b>
                     {experience || "Not provided"}
+                  </p>
+                  <p>
+                    <b>Languages</b>
+                    {languages.length > 0 ? languages.join(", ") : "Not provided"}
                   </p>
                 </div>
               </div>

@@ -17,6 +17,8 @@ export default function SignUpPage() {
   const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingUserType, setPendingUserType] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [phone, setPhone] = useState("");
   const router = useRouter();
 
   const userTypeOptions = [
@@ -32,16 +34,22 @@ export default function SignUpPage() {
   function handleUserTypeChange(event) {
     const selectedValue = event.target.value;
     setPendingUserType(selectedValue);
+    setAcceptedTerms(false);
+    setPhone("");
     setShowDisclaimerModal(true);
   }
 
   function handleDisclaimerAccept() {
+    if (!acceptedTerms) return;
     setUserType(pendingUserType);
     setShowDisclaimerModal(false);
   }
 
   function handleDisclaimerDecline() {
+    setUserType("");
     setPendingUserType("");
+    setAcceptedTerms(false);
+    setPhone("");
     setShowDisclaimerModal(false);
     // Reset the select to empty
     const selectElement = document.querySelector('select[name="userType"]');
@@ -56,6 +64,10 @@ export default function SignUpPage() {
 
     if (!userType) {
       setErrorMessage("Please select an account type before signing up.");
+      return;
+    }
+    if (!acceptedTerms) {
+      setErrorMessage("Please accept the Terms & Conditions before signing up.");
       return;
     }
 
@@ -90,19 +102,15 @@ export default function SignUpPage() {
         nextFieldErrors[fieldName] = `Your ${label} is missing.`;
       }
     }
-    if (userType === "PARTNER" && !String(formData.get("phone") ?? "").trim()) {
-      nextFieldErrors.phone = "Your phone number is missing.";
-    }
-
     const email = String(formData.get("email") ?? "").trim();
-    const phone = String(formData.get("phone") ?? "").replace(/\D/g, "");
+    const normalizedPhone = phone.replace(/\D/g, "");
     const password = formData.get("password");
     const confirmPassword = formData.get("confirmPassword");
 
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       nextFieldErrors.email = "Enter a valid email address.";
     }
-    if (userType === "PARTNER" && phone && !/^\d{10}$/.test(phone)) {
+    if (!/^\d{10}$/.test(normalizedPhone)) {
       nextFieldErrors.phone = "Enter a 10-digit phone number.";
     }
     if (String(password ?? "").trim() && password.length < 8) {
@@ -124,7 +132,7 @@ export default function SignUpPage() {
         email: formData.get("email"),
         password,
         type: userType,
-        ...(userType === "PARTNER" ? { phone } : {}),
+        phone: normalizedPhone,
         };
         // console.log(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/signup`);
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/signup`, {
@@ -143,6 +151,7 @@ export default function SignUpPage() {
         }
 
         window.sessionStorage.setItem("signupEmail", formData.get("email"));
+        window.sessionStorage.setItem("signupPhone", normalizedPhone);
         window.sessionStorage.setItem("signupPayload", JSON.stringify(signupPayload));
         window.sessionStorage.removeItem("otpResendAttempts");
         window.sessionStorage.removeItem("otpResendAvailableAt");
@@ -210,27 +219,26 @@ export default function SignUpPage() {
               />
               {fieldErrors.email && <span className={styles.fieldError} id="email-error">{fieldErrors.email}</span>}
             </label>
-            {userType === "PARTNER" && (
-              <label className={styles.field}>
-                Phone Number
-                <input
-                  required
-                  name="phone"
-                  type="tel"
-                  inputMode="numeric"
-                  autoComplete="tel-national"
-                  pattern="[0-9]{10}"
-                  placeholder="Enter your 10-digit phone number"
-                  aria-invalid={Boolean(fieldErrors.phone)}
-                  aria-describedby={fieldErrors.phone ? "phone-error" : undefined}
-                  onChange={(event) => {
-                    event.target.value = event.target.value.replace(/\D/g, "").slice(0, 10);
-                    setFieldErrors((errors) => ({ ...errors, phone: "" }));
-                  }}
-                />
-                {fieldErrors.phone && <span className={styles.fieldError} id="phone-error">{fieldErrors.phone}</span>}
-              </label>
-            )}
+            <label className={styles.field}>
+              Mobile Number
+              <input
+                required
+                name="phone"
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel-national"
+                pattern="[0-9]{10}"
+                value={phone}
+                placeholder="Enter your 10-digit mobile number"
+                aria-invalid={Boolean(fieldErrors.phone)}
+                aria-describedby={fieldErrors.phone ? "phone-error" : undefined}
+                onChange={(event) => {
+                  setPhone(event.target.value.replace(/\D/g, "").slice(0, 10));
+                  setFieldErrors((errors) => ({ ...errors, phone: "" }));
+                }}
+              />
+              {fieldErrors.phone && <span className={styles.fieldError} id="phone-error">{fieldErrors.phone}</span>}
+            </label>
             <label className={styles.field}>
               Password
               <span className={styles.passwordInput}>
@@ -327,8 +335,28 @@ export default function SignUpPage() {
                   confirmText="I Agree"
                   onConfirm={handleDisclaimerAccept}
                   cancelText="Decline"
+                  confirmDisabled={!acceptedTerms}
                 >
                   <p>{disclaimerMessages[pendingUserType]}</p>
+                  <div className={styles.termsSummary}>
+                    <b>Terms &amp; Conditions</b>
+                    <ul>
+                      <li>Provide accurate account and profile information.</li>
+                      <li>Follow booking, payment, and cancellation policies.</li>
+                      <li>Respect other users and upload only content you are allowed to share.</li>
+                    </ul>
+                    <Link href="/terms-and-conditions" target="_blank">
+                      Read the complete Terms &amp; Conditions
+                    </Link>
+                  </div>
+                  <label className={styles.modalTermsAgreement}>
+                    <input
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(event) => setAcceptedTerms(event.target.checked)}
+                    />
+                    <span>I have read and agree to the Terms &amp; Conditions.</span>
+                  </label>
                 </Modal>
                 <Modal
                   isOpen={showConfirmModal}

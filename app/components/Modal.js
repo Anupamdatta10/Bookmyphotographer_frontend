@@ -3,7 +3,17 @@
 import { useEffect } from "react";
 import styles from "./Modal.module.css";
 
-export default function Modal({ isOpen, onClose, title, children, confirmText, onConfirm, cancelText, showCancel = true }) {
+export default function Modal({
+  isOpen,
+  onClose,
+  title,
+  children,
+  confirmText,
+  onConfirm,
+  cancelText,
+  showCancel = true,
+  confirmDisabled = false,
+}) {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -44,7 +54,12 @@ export default function Modal({ isOpen, onClose, title, children, confirmText, o
             </button>
           )}
           {confirmText && (
-            <button className={styles.confirmButton} type="button" onClick={onConfirm}>
+            <button
+              className={styles.confirmButton}
+              type="button"
+              onClick={onConfirm}
+              disabled={confirmDisabled}
+            >
               {confirmText}
             </button>
           )}

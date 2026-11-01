@@ -1,10 +1,42 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import Modal from "./Modal";
 import styles from "../page.module.css";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+const savedUserKey = "photoConnectUser";
 
 export default function Footer() {
+  const router = useRouter();
+  const [showLoginRequired, setShowLoginRequired] = useState(false);
+
+  function handleUpdateProfile() {
+    try {
+      const savedUser = JSON.parse(
+        window.localStorage.getItem(savedUserKey) || "null",
+      );
+
+      if (
+        savedUser?.userId &&
+        savedUser.expiresAt &&
+        savedUser.expiresAt > Date.now()
+      ) {
+        router.push("/profile");
+        return;
+      }
+
+      window.localStorage.removeItem(savedUserKey);
+    } catch {
+      window.localStorage.removeItem(savedUserKey);
+    }
+
+    setShowLoginRequired(true);
+  }
+
   return (
     <footer id="footer" className={styles.footer}>
       <div>
@@ -38,17 +70,22 @@ export default function Footer() {
       </div>
       <div>
         <h4>Quick Links</h4>
-        <Link href="#home">Home</Link>
-        <Link href="#photographers">About Us</Link>
+        <Link href="/">Home</Link>
+        <Link href="/about">About Us</Link>
         <Link href="/contact">Contact Us</Link>
-        <Link href="#footer">Privacy Policy</Link>
-        <Link href="#footer">Terms & Conditions</Link>
+        <Link href="/terms-and-conditions">Terms &amp; Conditions</Link>
       </div>
       <div>
         <h4>For Photographers</h4>
         <Link href="/signup">Sign Up</Link>
         <Link href="/signin">Sign In</Link>
-        <Link href="#photographers">Update Profile</Link>
+        <button
+          className={styles.footerLinkButton}
+          type="button"
+          onClick={handleUpdateProfile}
+        >
+          Update Profile
+        </button>
       </div>
       <div>
         <h4>Contact</h4>
@@ -73,6 +110,17 @@ export default function Footer() {
       <small className={styles.copyright}>
         © {new Date().getFullYear()} BookMyPhotographer. All rights reserved.
       </small>
+
+      <Modal
+        isOpen={showLoginRequired}
+        onClose={() => setShowLoginRequired(false)}
+        title="Login Required"
+        confirmText="Sign In"
+        onConfirm={() => router.push("/signin")}
+        cancelText="Cancel"
+      >
+        <p>Please log in to update your profile.</p>
+      </Modal>
     </footer>
   );
 }

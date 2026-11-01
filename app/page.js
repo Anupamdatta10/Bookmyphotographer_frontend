@@ -223,8 +223,18 @@ export default function Home() {
 
         if (isCurrent) {
           const users = Array.isArray(result?.data) ? result.data : [];
+          const normalizedSearch = searchTerm.trim().toLocaleLowerCase();
           setPhotographers(
-            users.filter((user) => user.status === "active").map(mapPhotographer),
+            users
+              .filter((user) => user.status === "active")
+              .filter((user) =>
+                normalizedSearch
+                  ? String(user.name || "")
+                      .toLocaleLowerCase()
+                      .includes(normalizedSearch)
+                  : true,
+              )
+              .map(mapPhotographer),
           );
         }
       } catch (error) {

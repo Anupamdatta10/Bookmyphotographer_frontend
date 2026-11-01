@@ -12,7 +12,6 @@ export default function ProfileDetailsPage() {
   const [message, setMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [emailMissing, setEmailMissing] = useState(false);
-  const [phone, setPhone] = useState("");
   const [selectedFileName, setSelectedFileName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
     const [district, setDistrict] = useState("");
@@ -26,8 +25,22 @@ export default function ProfileDetailsPage() {
     const formData = new FormData(event.currentTarget);
     const file = formData.get("file");
     const nextFieldErrors = {};
+    const districtOption = WEST_BENGAL_DISTRICTS.find(
+      (option) => option.value === formData.get("district"),
+    );
+    const cityOptions = districtOption
+      ? WEST_BENGAL_CITIES_BY_DISTRICT[districtOption.value] || []
+      : [];
+    const cityOption = cityOptions.find(
+      (option) => option.value === formData.get("city"),
+    );
+    if (districtOption) {
+      formData.set("district", districtOption.label);
+    }
+    if (cityOption) {
+      formData.set("city", cityOption.label);
+    }
     const requiredFields = [
-      ["phone", "phone number"],
       ["country", "country"],
       ["state", "state"],
           ["district", "district"],
@@ -45,10 +58,6 @@ export default function ProfileDetailsPage() {
       if (isMissing) nextFieldErrors[fieldName] = `Your ${label} is missing.`;
     }
 
-    const phoneValue = String(formData.get("phone") ?? "").trim();
-    if (phoneValue && !/^\d{10}$/.test(phoneValue)) {
-      nextFieldErrors.phone = "Enter a 10-digit phone number.";
-    }
     if (file?.size && !file.type.startsWith("image/")) {
       nextFieldErrors.file = "Choose an image file.";
     } else if (file?.size > 5 * 1024 * 1024) {
@@ -67,6 +76,21 @@ export default function ProfileDetailsPage() {
 
     formData.set("email", email);
     formData.set("type", "PHOTOGRAPHER");
+
+    let phone = window.sessionStorage.getItem("signupPhone")?.trim();
+    if (!phone) {
+      try {
+        const signupPayload = JSON.parse(
+          window.sessionStorage.getItem("signupPayload") || "{}",
+        );
+        phone = String(signupPayload.phone || "").trim();
+      } catch {
+        phone = "";
+      }
+    }
+    if (phone) {
+      formData.set("phone", phone);
+    }
 
     setIsSaving(true);
     try {
@@ -128,6 +152,8 @@ export default function ProfileDetailsPage() {
         );
       }
       window.sessionStorage.removeItem("signupEmail");
+      window.sessionStorage.removeItem("signupPhone");
+      window.sessionStorage.removeItem("signupPayload");
       const confirmation = await Swal.fire({
         icon: "success",
         title: "Profile saved",
@@ -158,42 +184,14 @@ export default function ProfileDetailsPage() {
           <form className={styles.profileForm} onSubmit={submitDetails} noValidate>
             <label className={styles.field}>
               <div>
-                Phone <span aria-hidden="true">*</span>
-              </div>
-              <input
-                name="phone"
-                type="tel"
-                inputMode="numeric"
-                autoComplete="tel-national"
-                pattern="[0-9]{10}"
-                placeholder="10-digit phone number"
-                value={phone}
-                required
-                aria-invalid={Boolean(fieldErrors.phone)}
-                aria-describedby={fieldErrors.phone ? "phone-error" : undefined}
-                onChange={(event) => {
-                  let digits = event.target.value.replace(/\D/g, "");
-                  if (digits.length > 10 && digits.startsWith("0")) {
-                    digits = digits.slice(1);
-                  }
-                  setPhone(digits.slice(0, 10));
-                  setMessage("");
-                  setFieldErrors((errors) => ({ ...errors, phone: "" }));
-                }}
-              />
-              {fieldErrors.phone && <span className={styles.fieldError} id="phone-error">{fieldErrors.phone}</span>}
-            </label>
-
-            <label className={styles.field}>
-              <div>
                 Country <span aria-hidden="true">*</span>
               </div>
-                          <input type="hidden" name="country" value="india" />
+                          <input type="hidden" name="country" value="India" />
                                       <select
                             name="country_display"
                                         required
                                         disabled
-                                        defaultValue="india"
+                                        defaultValue="India"
                             aria-invalid={Boolean(fieldErrors.country)}
                             aria-describedby={fieldErrors.country ? "country-error" : undefined}
                             onChange={() => setFieldErrors((errors) => ({ ...errors, country: "" }))}
@@ -211,12 +209,12 @@ export default function ProfileDetailsPage() {
                                       <div>
                                         State <span aria-hidden="true">*</span>
                                       </div>
-                          <input type="hidden" name="state" value="west_bengal" />
+                          <input type="hidden" name="state" value="West Bengal" />
                                       <select
                                         name="state_display"
                                         required
                                         disabled
-                                        defaultValue="west_bengal"
+                                        defaultValue="West Bengal"
                                         aria-invalid={Boolean(fieldErrors.state)}
                                         aria-describedby={fieldErrors.state ? "state-error" : undefined}
                                         onChange={() => setFieldErrors((errors) => ({ ...errors, state: "" }))}

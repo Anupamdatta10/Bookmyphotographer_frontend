@@ -11,8 +11,9 @@ const savedUserKey = "photoConnectUser";
 
 const links = [
   ["home", "Home", "/"],
-  ["about", "About", "/#photographers"],
+  ["about", "About", "/about"],
   ["contact", "Contact Us", "/contact"],
+  ["terms-and-conditions", "Terms & Conditions", "/terms-and-conditions"],
 ];
 
 export default function Navbar({ current = "home", hideAuthActions = false, fullWidth = false }) {

@@ -237,7 +237,7 @@
     font-size: 13px;
   }
   .header nav .current {
-    border-bottom: 0;
+    border-bottom: 2px solid #fff;
   }
   .menuToggle {
     display: inline-flex;
