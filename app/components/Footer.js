@@ -42,15 +42,13 @@ export default function Footer() {
       <div>
         <Link href="/" className={styles.logo}>
           <Image
-            src={`${basePath}/BookMyPhotografer-logo.svg`}
+            className={styles.footerLogoImage}
+            src={`${basePath}/logo-horizontal.png`}
             alt="BookMyPhotografer logo"
-            width="31"
-            height="24"
+            width={2182}
+            height={240}
+            unoptimized
           />
-          <span>
-            <b>BookMyPhotografer</b>
-            <small>Capture People. Create Moments.</small>
-          </span>
         </Link>
         <p>Connecting great photographers with amazing opportunities.</p>
         <div className={styles.social}>

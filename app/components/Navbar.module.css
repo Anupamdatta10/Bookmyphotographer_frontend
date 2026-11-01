@@ -22,8 +22,10 @@
   color: #fff;
 }
 .logo img {
-  width: 31px;
-  height: 24px;
+  width: 86px;
+  height: 49px;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 20%));
 }
 .logo b,
 .logo small {
@@ -211,8 +213,8 @@
     font-size: 5px;
   }
   .logo img {
-    width: 25px;
-    height: 20px;
+    width: 52px;
+    height: 29px;
   }
   .header nav {
     display: none;

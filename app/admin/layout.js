@@ -1,11 +1,13 @@
 "use client";
 
 import { startTransition, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "./page.module.css";
 
 const savedUserKey = "photoConnectUser";
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const navigation = [
   ["dashboard", "Dashboard", "⌂"],
   ["manage", "Manage Photographers", "♟"],
@@ -125,9 +127,16 @@ export default function AdminLayout({ children }) {
         className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ""}`}
       >
         <div className={styles.brand}>
-          <span className={styles.brandMark}>▣</span>
           <span>
-            BookMyPhotografer <b>|</b> <em>Admin</em>
+            <Image
+              className={styles.brandLogo}
+              src={`${basePath}/logo-horizontal.png`}
+              alt="BookMyPhotografer"
+              width={2182}
+              height={240}
+              unoptimized
+            />
+            <em>Admin</em>
           </span>
         </div>
         <nav className={styles.navigation} aria-label="Admin navigation">
