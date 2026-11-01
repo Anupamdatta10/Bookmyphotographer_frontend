@@ -4,8 +4,8 @@ import Footer from "../components/Footer";
 import styles from "./page.module.css";
 
 export const metadata = {
-  title: "Terms & Conditions | BookMyPhotographer",
-  description: "Terms and conditions for using BookMyPhotographer.",
+  title: "Terms & Conditions | BookMyPhotografer",
+  description: "Terms and conditions for using BookMyPhotografer.",
 };
 
 export default function TermsAndConditionsPage() {
@@ -21,7 +21,7 @@ export default function TermsAndConditionsPage() {
 
       <section className={styles.content}>
         <p className={styles.introduction}>
-          Welcome to BookMyPhotographer. These Terms &amp; Conditions govern
+          Welcome to BookMyPhotografer. These Terms &amp; Conditions govern
           your use of our platform. By creating an account or using our
           services, you agree to follow these terms.
         </p>
@@ -95,7 +95,7 @@ export default function TermsAndConditionsPage() {
           <h2>8. Liability</h2>
           <p>
             The platform is provided on an as-is basis. To the extent permitted
-            by law, BookMyPhotographer is not liable for indirect losses arising
+            by law, BookMyPhotografer is not liable for indirect losses arising
             from use of the platform or arrangements made between users and
             photographers.
           </p>
@@ -107,8 +107,8 @@ export default function TermsAndConditionsPage() {
             We may update these terms when needed. Continued use of the platform
             after an update means you accept the revised terms. Questions may be
             sent to{" "}
-            <a href="mailto:support@bookmyphotographer.com">
-              support@bookmyphotographer.com
+            <a href="mailto:support@BookMyPhotografer.com">
+              support@BookMyPhotografer.com
             </a>
             .
           </p>

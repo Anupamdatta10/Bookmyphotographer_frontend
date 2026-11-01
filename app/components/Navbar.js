@@ -82,13 +82,13 @@ export default function Navbar({ current = "home", hideAuthActions = false, full
       <header className={`${styles.header} ${fullWidth ? styles.fullWidth : ""}`}>
       <Link href="/" className={styles.logo}>
         <Image
-          src={`${basePath}/bookmyphotographer-logo.svg`}
-          alt="BookMyPhotographer logo"
+          src={`${basePath}/BookMyPhotografer-logo.svg`}
+          alt="BookMyPhotografer logo"
           width="31"
           height="24"
         />
         <span>
-          <b>BookMyPhotographer</b>
+          <b>BookMyPhotografer</b>
           <small>Capture People. Create Moments.</small>
         </span>
       </Link>

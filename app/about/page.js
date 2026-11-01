@@ -4,8 +4,8 @@ import Footer from "../components/Footer";
 import styles from "./page.module.css";
 
 export const metadata = {
-  title: "About Us | BookMyPhotographer",
-  description: "Learn about BookMyPhotographer and how we connect people with professional photographers.",
+  title: "About Us | BookMyPhotografer",
+  description: "Learn about BookMyPhotografer and how we connect people with professional photographers.",
 };
 
 export default function AboutPage() {
@@ -18,7 +18,7 @@ export default function AboutPage() {
           <p className={styles.eyebrow}>ABOUT US</p>
           <h1>Capture People.<br />Create Moments.</h1>
           <p className={styles.tagline}>
-            BookMyPhotographer connects you with talented photographers
+            BookMyPhotografer connects you with talented photographers
             who turn your special occasions into lasting memories.
           </p>
           <Link href="/signup" className={styles.ctaButton}>

@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "BookMyPhotographer | Find your photographer",
+  title: "BookMyPhotografer | Find your photographer",
   description: "Find exceptional photographers for the moments that matter.",
 };
 

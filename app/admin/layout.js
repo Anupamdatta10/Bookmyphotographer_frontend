@@ -127,7 +127,7 @@ export default function AdminLayout({ children }) {
         <div className={styles.brand}>
           <span className={styles.brandMark}>▣</span>
           <span>
-            BookMyPhotographer <b>|</b> <em>Admin</em>
+            BookMyPhotografer <b>|</b> <em>Admin</em>
           </span>
         </div>
         <nav className={styles.navigation} aria-label="Admin navigation">
@@ -168,7 +168,7 @@ export default function AdminLayout({ children }) {
             Logout
           </button>
         </nav>
-        <div className={styles.sidebarFooter}>BookMyPhotographer Admin v1.0</div>
+        <div className={styles.sidebarFooter}>BookMyPhotografer Admin v1.0</div>
       </aside>
 
       {sidebarOpen && (
