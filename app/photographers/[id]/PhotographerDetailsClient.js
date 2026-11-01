@@ -466,7 +466,7 @@ export default function PhotographerDetailsClient() {
                     <h2 id="profile-title">{photographer.name}</h2>
                     <p>{photographer.proffession || "Photographer"}</p>
                   </div>
-                  <span className={styles.approved}>✓ Approved</span>
+                  <span className={styles.approved}>✓ Verified</span>
                 </div>
                 <p className={styles.location}>● {location}</p>
                 <div className={styles.stats}>
