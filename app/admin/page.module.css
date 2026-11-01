@@ -290,6 +290,17 @@
     font-weight: 700;
 }
 
+.personLink {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
 .avatar {
     width: 34px;
     height: 34px;

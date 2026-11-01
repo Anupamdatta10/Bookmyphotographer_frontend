@@ -367,7 +367,6 @@ export default function BookingsPage() {
                 <th>Booking ID</th>
                 <th>Photographer</th>
                 <th>Client</th>
-                <th>Client Phone</th>
                             <th>Event Date(s)</th>
                             <th>Location</th>
                             <th>Duration</th>
@@ -380,21 +379,21 @@ export default function BookingsPage() {
             <tbody>
               {isLoading && (
                 <tr>
-                  <td className={styles.empty} colSpan="11">
+                  <td className={styles.empty} colSpan="10">
                     Loading bookings...
                   </td>
                 </tr>
               )}
               {!isLoading && error && (
                 <tr>
-                  <td className={styles.empty} colSpan="11" role="alert">
+                  <td className={styles.empty} colSpan="10" role="alert">
                     {error}
                   </td>
                 </tr>
               )}
               {!isLoading && !error && bookings.length === 0 && (
                 <tr>
-                  <td className={styles.empty} colSpan="11">
+                  <td className={styles.empty} colSpan="10">
                     No bookings found.
                   </td>
                 </tr>
@@ -433,12 +432,12 @@ export default function BookingsPage() {
                     </div>
                   </td>
                   <td>
-                    <div>
+                    <div className={styles.clientDetails}>
                                   <b>{booking.userId?.name || "Unknown"}</b>
                                   <small>{booking.userId?.email || ""}</small>
+                                  <small>{booking.userId?.phone || "N/A"}</small>
                                 </div>
                               </td>
-                              <td>{booking.userId?.phone || "N/A"}</td>
                               <td>
                                 {Array.isArray(booking.eventDate) ? (
                                   booking.eventDate.map((date, idx) => (

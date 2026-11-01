@@ -316,7 +316,12 @@ export default function AdminPage() {
                     filteredPhotographers.map((photographer) => (
                     <tr key={photographer.id}>
                       <td>
-                        <div className={styles.person}>
+                        <button
+                          type="button"
+                          className={styles.personLink}
+                          onClick={() => router.push(`/admin/photographers/${photographer.id}`)}
+                        >
+                          <div className={styles.person}>
                           <span className={styles.personAvatar}>
                             <Image
                               className={styles.personPhoto}
@@ -336,6 +341,7 @@ export default function AdminPage() {
                             <small>{photographer.email}</small>
                           </div>
                         </div>
+                        </button>
                       </td>
                       <td>{photographer.location}</td>
                       <td>{photographer.joined}</td>
@@ -348,6 +354,13 @@ export default function AdminPage() {
                       </td>
                       <td>
                         <div className={styles.rowActions}>
+                          <button
+                            type="button"
+                            className={styles.secondaryAction}
+                            onClick={() => router.push(`/admin/photographers/${photographer.id}`)}
+                          >
+                            View details
+                          </button>
                           {photographer.status === "Pending" && (
                             <>
                               <button

@@ -276,16 +276,14 @@
 
 .tableWrap th:nth-child(1) { width: 8%; }
 .tableWrap th:nth-child(2) { width: 13%; }
-.tableWrap th:nth-child(3) { width: 12%; }
-.tableWrap th:nth-child(4) { width: 12%; }
-.tableWrap th:nth-child(5) { width: 10%; }
+.tableWrap th:nth-child(3) { width: 14%; }
+.tableWrap th:nth-child(4) { width: 10%; }
+.tableWrap th:nth-child(5) { width: 8%; }
 .tableWrap th:nth-child(6) { width: 8%; }
 .tableWrap th:nth-child(7) { width: 8%; }
-.tableWrap th:nth-child(8) { width: 8%; }
-.tableWrap th:nth-child(9) { width: 13%; }
-.tableWrap th:nth-child(10) { width: 8%; }
-
-.tableWrap th:nth-child(11) { width: 8%; }
+.tableWrap th:nth-child(8) { width: 13%; }
+.tableWrap th:nth-child(9) { width: 8%; }
+.tableWrap th:nth-child(10) { width: 10%; }
 
 .tableWrap th,
 .tableWrap td {
@@ -397,6 +395,30 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.clientDetails {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.clientDetails b,
+.clientDetails small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.clientDetails b {
+  color: #2c4357;
+  font-size: 11px;
+}
+
+.clientDetails small {
+  color: #9aa8b2;
+  font-size: 9px;
+  font-weight: 700;
 }
 
 .eventDateItem {

@@ -13,6 +13,7 @@ export default function ProfileDetailsPage() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [emailMissing, setEmailMissing] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState("");
+  const [selectedIdentityProofName, setSelectedIdentityProofName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
     const [district, setDistrict] = useState("");
     const [city, setCity] = useState("");
@@ -24,6 +25,7 @@ export default function ProfileDetailsPage() {
 
     const formData = new FormData(event.currentTarget);
     const file = formData.get("file");
+    const identityProof = formData.get("identityProof");
     const nextFieldErrors = {};
     const districtOption = WEST_BENGAL_DISTRICTS.find(
       (option) => option.value === formData.get("district"),
@@ -47,6 +49,7 @@ export default function ProfileDetailsPage() {
           ["city", "city"],
           ["address1", "address 1"],
           ["file", "profile image"],
+          ["identityProof", "identity proof"],
         ];
 
     for (const [fieldName, label] of requiredFields) {
@@ -62,6 +65,11 @@ export default function ProfileDetailsPage() {
       nextFieldErrors.file = "Choose an image file.";
     } else if (file?.size > 5 * 1024 * 1024) {
       nextFieldErrors.file = "Image must be 5 MB or smaller.";
+    }
+    if (identityProof?.size && !identityProof.type.startsWith("image/")) {
+      nextFieldErrors.identityProof = "Choose an image file for identity proof.";
+    } else if (identityProof?.size > 5 * 1024 * 1024) {
+      nextFieldErrors.identityProof = "Identity proof must be 5 MB or smaller.";
     }
 
     setFieldErrors(nextFieldErrors);
@@ -147,6 +155,8 @@ export default function ProfileDetailsPage() {
             userId: String(user._id),
             name: user.name,
             profileImageUrl: user.profileImageUrl,
+            identityProofUrl: user.identityProofUrl,
+            accessToken: user.accessToken || result?.accessToken,
             expiresAt: Date.now() + 10 * 24 * 60 * 60 * 1000,
           }),
         );
@@ -349,6 +359,52 @@ export default function ProfileDetailsPage() {
                 </span>
               </label>
               {fieldErrors.file && <span className={styles.fieldError} id="file-error">{fieldErrors.file}</span>}
+            </div>
+
+            <div
+              className={`${styles.profileUpload} ${styles.profileFieldWide}`}
+            >
+              <p className={styles.profileFileLabel}>
+                Identity proof <span aria-hidden="true">*</span>
+              </p>
+              <label className={styles.fileDropzone}>
+                <input
+                  className={styles.fileInput}
+                  name="identityProof"
+                  type="file"
+                  accept="image/*"
+                  aria-label="Choose an identity proof photo"
+                  required
+                  aria-invalid={Boolean(fieldErrors.identityProof)}
+                  aria-describedby={fieldErrors.identityProof ? "identity-proof-error" : undefined}
+                  onChange={(event) => {
+                    setSelectedIdentityProofName(
+                      event.currentTarget.files?.[0]?.name ?? "",
+                    );
+                    setMessage("");
+                    setFieldErrors((errors) => ({ ...errors, identityProof: "" }));
+                  }}
+                />
+                <span className={styles.uploadIcon} aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none">
+                    <path d="M12 16V4m0 0L7.5 8.5M12 4l4.5 4.5M5 14v5h14v-5" />
+                  </svg>
+                </span>
+                <span className={styles.uploadCopy}>
+                  <strong className={styles.uploadFileName}>
+                    {selectedIdentityProofName || "Choose identity proof"}
+                  </strong>
+                  <span>Upload a clear JPG, PNG, GIF, or WebP photo (maximum 5 MB)</span>
+                </span>
+                <span className={styles.uploadAction}>
+                  {selectedIdentityProofName ? "Change" : "Browse files"}
+                </span>
+              </label>
+              {fieldErrors.identityProof && (
+                <span className={styles.fieldError} id="identity-proof-error">
+                  {fieldErrors.identityProof}
+                </span>
+              )}
             </div>
 
             {message && (

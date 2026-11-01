@@ -248,6 +248,9 @@ export default function ProfilePage() {
   const [saveMessageIsError, setSaveMessageIsError] = useState(false);
   const [selectedImageFile, setSelectedImageFile] = useState(null);
   const [selectedImagePreview, setSelectedImagePreview] = useState("");
+  const [selectedIdentityProofFile, setSelectedIdentityProofFile] = useState(null);
+  const [selectedIdentityProofPreview, setSelectedIdentityProofPreview] =
+    useState("");
   const [clearProfileImage, setClearProfileImage] = useState(false);
   const [selectedVideoFiles, setSelectedVideoFiles] = useState(() =>
     Array(maxProfileVideos).fill(null),
@@ -256,8 +259,10 @@ export default function ProfilePage() {
     Array(maxProfileVideos).fill(""),
   );
   const imageInputRef = useRef(null);
+  const identityProofInputRef = useRef(null);
   const videoInputRefs = useRef([]);
   const imagePreviewUrlRef = useRef("");
+  const identityProofPreviewUrlRef = useRef("");
   const videoPreviewUrlsRef = useRef(Array(maxProfileVideos).fill(""));
   const [dobValue, setDobValue] = useState("");
   const [calendarMonth, setCalendarMonth] = useState(() => {
@@ -441,6 +446,9 @@ export default function ProfilePage() {
       if (imagePreviewUrlRef.current) {
         URL.revokeObjectURL(imagePreviewUrlRef.current);
       }
+      if (identityProofPreviewUrlRef.current) {
+        URL.revokeObjectURL(identityProofPreviewUrlRef.current);
+      }
       videoPreviewUrlsRef.current.forEach((previewUrl) => {
         if (previewUrl) URL.revokeObjectURL(previewUrl);
       });
@@ -510,6 +518,16 @@ export default function ProfilePage() {
     setSelectedImagePreview(previewUrl);
   }
 
+  function updateSelectedIdentityProof(file) {
+    if (identityProofPreviewUrlRef.current) {
+      URL.revokeObjectURL(identityProofPreviewUrlRef.current);
+    }
+    const previewUrl = file ? URL.createObjectURL(file) : "";
+    identityProofPreviewUrlRef.current = previewUrl;
+    setSelectedIdentityProofFile(file);
+    setSelectedIdentityProofPreview(previewUrl);
+  }
+
   function updateSelectedVideo(index, file) {
     const nextPreviewUrls = [...videoPreviewUrlsRef.current];
     if (nextPreviewUrls[index]) URL.revokeObjectURL(nextPreviewUrls[index]);
@@ -552,11 +570,13 @@ export default function ProfilePage() {
 
   function cancelProfileEdit() {
     updateSelectedImage(null);
+    updateSelectedIdentityProof(null);
     setClearProfileImage(false);
     selectedVideoFiles.forEach((_, index) => updateSelectedVideo(index, null));
     setDeletedSamplePhotoIds([]);
     setDeletedVideoSlots([]);
     if (imageInputRef.current) imageInputRef.current.value = "";
+    if (identityProofInputRef.current) identityProofInputRef.current.value = "";
     videoInputRefs.current.forEach((input) => {
       if (input) input.value = "";
     });
@@ -571,6 +591,7 @@ export default function ProfilePage() {
     setSaveMessage("");
     const formData = new FormData(event.currentTarget);
     const imageFile = formData.get("file");
+    const identityProofFile = selectedIdentityProofFile;
     const videoFiles = selectedVideoFiles;
     const videoSlotsToDelete = deletedVideoSlots;
     const shouldClearProfileImage = clearProfileImage;
@@ -583,6 +604,17 @@ export default function ProfilePage() {
     }
     if (imageFile?.size > 5 * 1024 * 1024) {
       setSaveMessage("Image must be 5 MB or smaller.");
+      setSaveMessageIsError(true);
+      return;
+    }
+    if (
+      identityProofFile &&
+      (!identityProofFile.type.startsWith("image/") ||
+        identityProofFile.size > 5 * 1024 * 1024)
+    ) {
+      setSaveMessage(
+        "Choose an identity proof image no larger than 5 MB.",
+      );
       setSaveMessageIsError(true);
       return;
     }
@@ -678,6 +710,7 @@ export default function ProfilePage() {
       Object.keys(payload).length === 0 &&
       !imageFile?.size &&
       !shouldClearProfileImage &&
+      !identityProofFile &&
       videoFiles.every((file) => !file) &&
       videoSlotsToDelete.length === 0 &&
       !hasSampleChanges
@@ -702,6 +735,10 @@ export default function ProfilePage() {
         });
         const result = await response.json().catch(() => null);
         if (!response.ok) {
+          if (response.status === 401 || response.status === 403) {
+            window.localStorage.removeItem(savedUserKey);
+            router.replace("/signin");
+          }
           throw new Error(result?.message || "Could not save profile changes.");
         }
         return result?.data ?? result;
@@ -775,6 +812,27 @@ export default function ProfilePage() {
         setClearProfileImage(false);
         if (!savedProfileParts.includes("Profile image")) {
           savedProfileParts.push("Profile image");
+        }
+      }
+
+      if (identityProofFile) {
+        const identityProofData = new FormData();
+        identityProofData.append("identityProof", identityProofFile);
+        updatedUser = await updateProfile(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/${userId}/identity-proof`,
+          { method: "PATCH", body: identityProofData },
+        );
+        setProfile(updatedUser);
+        syncSavedUser(updatedUser);
+        savedProfileParts.push("Identity proof");
+        setSelectedIdentityProofFile(null);
+        setSelectedIdentityProofPreview("");
+        if (identityProofPreviewUrlRef.current) {
+          URL.revokeObjectURL(identityProofPreviewUrlRef.current);
+          identityProofPreviewUrlRef.current = "";
+        }
+        if (identityProofInputRef.current) {
+          identityProofInputRef.current.value = "";
         }
       }
 
@@ -1396,6 +1454,7 @@ export default function ProfilePage() {
                       width={104}
                       height={104}
                       unoptimized
+                      loading="eager"
                       onError={(event) => {
                         event.currentTarget.onerror = null;
                         event.currentTarget.src = `${basePath}/defolt_profile_pic.jpg`;
@@ -1472,6 +1531,90 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </section>
+
+              {isPhotographer && (
+                <section className={styles.editSection}>
+                  <h2>Identity proof</h2>
+                  <div className={styles.imageUpload}>
+                    <div className={styles.imagePreviewFrame}>
+                      <Image
+                        className={styles.imagePreview}
+                        src={
+                          selectedIdentityProofPreview ||
+                          (profile.identityProofUrl
+                            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}${profile.identityProofUrl}`
+                            : `${basePath}/defolt_profile_pic.jpg`)
+                        }
+                        alt="Identity proof preview"
+                        width={104}
+                        height={104}
+                        unoptimized
+                        loading="eager"
+                        onError={(event) => {
+                          event.currentTarget.onerror = null;
+                          event.currentTarget.src = `${basePath}/defolt_profile_pic.jpg`;
+                        }}
+                      />
+                    </div>
+                    <div className={styles.imageUploadContent}>
+                      <strong>
+                        {selectedIdentityProofFile
+                          ? "New identity proof selected"
+                          : profile.identityProofUrl
+                            ? "Current identity proof uploaded"
+                            : "Identity proof required"}
+                      </strong>
+                      <p>
+                        Choose a clear JPG, PNG, GIF, or WebP image.
+                        Maximum size: 5 MB.
+                      </p>
+                      <div className={styles.imageUploadActions}>
+                        <label className={styles.imageSelectButton}>
+                          <input
+                            ref={identityProofInputRef}
+                            className={styles.imageFileInput}
+                            name="identityProof"
+                            type="file"
+                            accept="image/*"
+                            aria-label="Choose a new identity proof"
+                            onChange={(event) => {
+                              updateSelectedIdentityProof(
+                                event.currentTarget.files?.[0] ?? null,
+                              );
+                              setSaveMessage("");
+                            }}
+                          />
+                          <span>
+                            {selectedIdentityProofFile
+                              ? "Choose another"
+                              : "Choose proof"}
+                          </span>
+                        </label>
+                        {selectedIdentityProofFile && (
+                          <button
+                            className={styles.samplePhotoClear}
+                            type="button"
+                            disabled={isSaving}
+                            onClick={() => {
+                              updateSelectedIdentityProof(null);
+                              if (identityProofInputRef.current) {
+                                identityProofInputRef.current.value = "";
+                              }
+                            }}
+                          >
+                            Clear selection
+                          </button>
+                        )}
+                      </div>
+                      {selectedIdentityProofFile && (
+                        <small className={styles.imageFileName}>
+                          {selectedIdentityProofFile.name}
+                        </small>
+                      )}
+                    </div>
+                  </div>
+                </section>
+              )}
 
               {isPhotographer && (
                 <section className={styles.editSection}>
