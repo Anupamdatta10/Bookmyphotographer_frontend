@@ -43,15 +43,15 @@ export default function Footer() {
         <Link href="/" className={styles.logo}>
           <Image
             className={styles.footerLogoImage}
-            src={`${basePath}/logo-horizontal.png`}
+            src={`${basePath}/main_logo.png`}
             alt="BookMyPhotografer logo"
             width={2182}
             height={240}
             unoptimized
           />
         </Link>
-        <p>Connecting great photographers with amazing opportunities.</p>
-        <div className={styles.social}>
+        <p>Connecting customers with independent creative photographers,one booking at a time.</p>
+        {/* <div className={styles.social}>
           <a href="https://facebook.com" aria-label="Facebook">
             <Image src={`${basePath}/facebook.svg`} alt="" width={17} height={17} />
           </a>
@@ -64,7 +64,7 @@ export default function Footer() {
           <a href="https://linkedin.com" aria-label="LinkedIn">
             <Image src={`${basePath}/linkedin.svg`} alt="" width={17} height={17} />
           </a>
-        </div>
+        </div> */}
       </div>
       <div>
         <h4>Quick Links</h4>
@@ -72,6 +72,8 @@ export default function Footer() {
         <Link href="/about">About Us</Link>
         <Link href="/contact">Contact Us</Link>
         <Link href="/terms-and-conditions">Terms &amp; Conditions</Link>
+        <Link href="/privacy-policy">Privacy Policy</Link>
+        <Link href="/booking-cancellation-policy">Booking &amp; Cancellation Policy</Link>
       </div>
       <div>
         <h4>For Photographers</h4>
@@ -87,22 +89,25 @@ export default function Footer() {
       </div>
       <div>
         <h4>Contact</h4>
-        <a className={styles.contactItem} href="mailto:support@BookMyPhotografer.com">
+        <a className={styles.contactItem} href="https://bookmyfotographer.co.in" target="_blank" rel="noreferrer">
+          <span aria-hidden="true">🌐</span>
+          <span>bookmyfotographer.co.in</span>
+        </a>
+        <a className={styles.contactItem} href="mailto:bookmyfotographer@gmail.com">
           <span aria-hidden="true">✉</span>
-          <span>support@BookMyPhotografer.com</span>
+          <span>bookmyfotographer@gmail.com</span>
         </a>
-        <a className={styles.contactItem} href="tel:+919876543210">
+        <a className={styles.contactItem} href="tel:+919804060342">
           <span aria-hidden="true">☎</span>
-          <span>+91 98765 43210</span>
+          <span>+91 9804060342</span>
         </a>
-        <a
-          className={styles.contactItem}
-          href="https://www.google.com/maps/search/?api=1&query=Bengaluru%2C%20Karnataka%2C%20India"
-          target="_blank"
-          rel="noreferrer"
-        >
+        <a className={styles.contactItem} href="tel:+918334934147">
+          <span aria-hidden="true">⚠</span>
+          <span>Grievance: Anit Dey, +91 8334934147</span>
+        </a>
+        <a className={styles.contactItem}>
           <span aria-hidden="true">●</span>
-          <span>Bengaluru, India</span>
+          <span>BookMyFotographer | West Bengal, India</span>
         </a>
       </div>
       <small className={styles.copyright}>

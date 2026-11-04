@@ -14,6 +14,7 @@ const links = [
   ["about", "About", "/about"],
   ["contact", "Contact Us", "/contact"],
   ["terms-and-conditions", "Terms & Conditions", "/terms-and-conditions"],
+  ["privacy-policy", "Privacy Policy", "/privacy-policy"],
 ];
 
 export default function Navbar({ current = "home", hideAuthActions = false, fullWidth = false }) {
@@ -82,15 +83,12 @@ export default function Navbar({ current = "home", hideAuthActions = false, full
       <header className={`${styles.header} ${fullWidth ? styles.fullWidth : ""}`}>
       <Link href="/" className={styles.logo}>
         <Image
-          src={`${basePath}/BookMyPhotografer-logo-full.png`}
+          src={`${basePath}/main_logo.png`}
           alt="BookMyPhotografer logo"
           width={1520}
           height={860}
         />
-        <span>
-          <b>BookMyPhotografer</b>
-          <small>Capture People. Create Moments.</small>
-        </span>
+
       </Link>
       <button
         className={styles.menuToggle}

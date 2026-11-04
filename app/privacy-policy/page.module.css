@@ -1,0 +1,94 @@
+.page {
+  min-height: 100vh;
+  background: #f5f8f9;
+  color: #102733;
+}
+
+.hero {
+  padding: 64px 20px 58px;
+  background: linear-gradient(135deg, #0a202c, #173d50);
+  color: #fff;
+  text-align: center;
+}
+
+.eyebrow {
+  margin-bottom: 10px;
+  color: #8dc5ff;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+
+.hero h1 {
+  margin-bottom: 10px;
+  font-size: clamp(34px, 6vw, 48px);
+}
+
+.hero > p:last-child {
+  color: #c8d6dc;
+  font-size: 13px;
+}
+
+.content {
+  width: min(820px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 52px 0 80px;
+}
+
+.introduction {
+  margin-bottom: 36px;
+  padding: 24px 28px;
+  border-left: 4px solid #1878f2;
+  border-radius: 5px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgb(16 39 51 / 8%);
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.content article {
+  margin-bottom: 30px;
+}
+
+.content article h2 {
+  margin-bottom: 9px;
+  color: #173b4c;
+  font-size: 20px;
+}
+
+.content article p {
+  color: #526873;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.content article ul {
+  color: #526873;
+  font-size: 15px;
+  line-height: 1.75;
+  margin: 12px 0 0 20px;
+  padding: 0;
+}
+
+.content article li {
+  margin-bottom: 8px;
+}
+
+.content article a {
+  color: #1878f2;
+}
+
+@media (max-width: 600px) {
+  .hero {
+    padding: 48px 20px;
+  }
+
+  .content {
+    width: min(100% - 32px, 820px);
+    padding-top: 36px;
+  }
+
+  .introduction {
+    padding: 20px;
+  }
+}

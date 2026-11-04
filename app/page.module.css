@@ -634,7 +634,13 @@
 .footer > div > p {
   margin: 3px 0;
   line-height: 1.5;
-  max-width: 142px;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .footer > div > p {
+    white-space: normal;
+  }
 }
 .footer h4 {
   font-size: 12px;

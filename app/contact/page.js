@@ -55,34 +55,48 @@ export default function ContactPage() {
           <aside>
             <a
               className={styles.contactDetail}
-              href="https://www.google.com/maps/search/?api=1&query=Bengaluru%2C%20Karnataka%2C%20India"
+              href="https://bookmyfotographer.co.in"
               target="_blank"
               rel="noreferrer"
             >
-              <i>⌖</i>
+              <i>🌐</i>
               <div>
-                <b>Our Office</b>
-                <p>Bengaluru, Karnataka, India</p>
+                <b>Website</b>
+                <p>bookmyfotographer.co.in</p>
               </div>
             </a>
             <a
               className={styles.contactDetail}
-              href="mailto:support@BookMyPhotografer.com"
+              href="mailto:bookmyfotographer@gmail.com"
             >
               <i>✉</i>
               <div>
                 <b>Email</b>
-                <p>support@BookMyPhotografer.com</p>
+                <p>bookmyfotographer@gmail.com</p>
               </div>
             </a>
-            <a className={styles.contactDetail} href="tel:+919876543210">
+            <a className={styles.contactDetail} href="tel:+919804060342">
               <i>☎</i>
               <div>
                 <b>Phone</b>
-                <p>+91 98765 43210</p>
+                <p>+91 9804060342</p>
               </div>
             </a>
-            <section className={styles.follow}>
+            <a className={styles.contactDetail} href="tel:+918334934147">
+              <i>⚠</i>
+              <div>
+                <b>Grievance Contact</b>
+                <p>Anit Dey, +91 8334934147</p>
+              </div>
+            </a>
+            <a className={styles.contactDetail}>
+              <i>●</i>
+              <div>
+                <b>Address</b>
+                <p>BookMyFotographer | West Bengal, India</p>
+              </div>
+            </a>
+            {/* <section className={styles.follow}>
               <b>Follow Us</b>
               <div>
                 <a href="https://facebook.com" aria-label="Facebook">
@@ -98,7 +112,7 @@ export default function ContactPage() {
                   <Image src={`${basePath}/youtube.svg`} alt="" width={18} height={18} />
                 </a>
               </div>
-            </section>
+            </section> */}
           </aside>
         </div>
       </section>

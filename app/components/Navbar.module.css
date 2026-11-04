@@ -16,16 +16,26 @@
 }
 .logo {
   display: flex;
-  min-width: 182px;
+  flex-direction: row;
   align-items: center;
-  gap: 9px;
+  gap: 6px;
   color: #fff;
+  min-width: 182px;
 }
 .logo img {
-  width: 86px;
-  height: 49px;
+  width: 200px;
+  height: 100px;
   object-fit: contain;
   filter: drop-shadow(0 1px 1px rgb(0 0 0 / 20%));
+  flex-shrink: 0;
+}
+.logo span {
+  display: block;
+  text-align: left;
+  color: #dbe3e5;
+  font-size: 11px;
+  line-height: 1.3;
+  white-space: normal;
 }
 .logo b,
 .logo small {
@@ -205,6 +215,9 @@
   }
   .logo {
     min-width: auto;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
   }
   .logo b {
     font-size: 12px;
@@ -213,8 +226,8 @@
     font-size: 5px;
   }
   .logo img {
-    width: 52px;
-    height: 29px;
+    width: 150px;
+    height: 50px;
   }
   .header nav {
     display: none;

@@ -130,7 +130,7 @@ export default function AdminLayout({ children }) {
           <span>
             <Image
               className={styles.brandLogo}
-              src={`${basePath}/logo-horizontal.png`}
+            src={`${basePath}/main_logo.png`}
               alt="BookMyPhotografer"
               width={2182}
               height={240}

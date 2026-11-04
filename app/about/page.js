@@ -5,7 +5,7 @@ import styles from "./page.module.css";
 
 export const metadata = {
   title: "About Us | BookMyPhotografer",
-  description: "Learn about BookMyPhotografer and how we connect people with professional photographers.",
+  description: "Learn about BookMyPhotografer and how we connect people with professional photographers and videographers.",
 };
 
 export default function AboutPage() {
@@ -16,10 +16,11 @@ export default function AboutPage() {
       <section className={styles.hero}>
         <div className={styles.heroContent}>
           <p className={styles.eyebrow}>ABOUT US</p>
-          <h1>Capture People.<br />Create Moments.</h1>
+          <h1>Bringing People, Photographers & Moments Together.</h1>
           <p className={styles.tagline}>
-            BookMyPhotografer connects you with talented photographers
-            who turn your special occasions into lasting memories.
+            BookMyPhotografer is a new-age digital marketplace built to connect people
+            and businesses with talented freelance photographers and videographers
+            through a simple, convenient, and flexible booking platform.
           </p>
           <Link href="/signup" className={styles.ctaButton}>
             Join as a Photographer
@@ -29,12 +30,25 @@ export default function AboutPage() {
 
       <section className={styles.mission}>
         <div className={styles.container}>
-          <h2>Our Mission</h2>
+          <h2>Our Idea</h2>
           <p>
-            We believe every moment deserves to be captured beautifully.
-            Our platform makes it simple to find, compare, and book
-            professional photographers for weddings, events, portraits,
-            and commercial shoots—all in one place.
+            Finding the right photographer or videographer for an occasion, event, or
+            professional requirement can often be challenging. Whether it&apos;s a
+            wedding, birthday, anniversary, corporate gathering, product shoot,
+            promotional campaign, or a personal photoshoot, people need reliable
+            creative professionals who understand their requirements and budget.
+          </p>
+          <p>
+            On the other side, thousands of talented photographers and videographers
+            work independently, often relying on personal contacts, references, and
+            social media to find assignments. We envision bringing both sides together
+            through one common digital platform.
+          </p>
+          <p>
+            BookMyPhotografer aims to simplify this process by creating a marketplace
+            where customers can discover freelance photography and videography
+            professionals, explore their work, and hire them according to their
+            specific requirements.
           </p>
         </div>
       </section>
@@ -44,35 +58,35 @@ export default function AboutPage() {
           <h2>What We Stand For</h2>
           <div className={styles.grid}>
             <article className={styles.card}>
-              <div className={styles.icon}>🎯</div>
-              <h3>Quality First</h3>
+              <div className={styles.icon}>📸</div>
+              <h3>What We Do</h3>
               <p>
-                Every photographer is verified and reviewed so you can
-                book with confidence.
+                Flexible, requirement-based booking for photography and
+                videography services—from hourly engagements to full-day events.
               </p>
             </article>
             <article className={styles.card}>
               <div className={styles.icon}>🤝</div>
-              <h3>Fair & Transparent</h3>
-              <p>
-                Clear pricing, honest policies, and no hidden fees for
-                clients or photographers.
-              </p>
-            </article>
-            <article className={styles.card}>
-              <div className={styles.icon}>⚡</div>
-              <h3>Effortless Booking</h3>
-              <p>
-                Search, compare, and confirm in minutes—no endless
-                emails or phone calls.
-              </p>
-            </article>
-            <article className={styles.card}>
-              <div className={styles.icon}>📸</div>
               <h3>Empowering Creators</h3>
               <p>
-                We give photographers the tools to showcase their work,
-                manage bookings, and grow their business.
+                A common space for independent photographers and videographers to
+                showcase portfolios, reach customers, and grow independently.
+              </p>
+            </article>
+            <article className={styles.card}>
+              <div className={styles.icon}>🌍</div>
+              <h3>Our Vision</h3>
+              <p>
+                A trusted marketplace from West Bengal, India, connecting customers
+                and creative professionals everywhere.
+              </p>
+            </article>
+            <article className={styles.card}>
+              <div className={styles.icon}>✨</div>
+              <h3>Our Commitment</h3>
+              <p>
+                Valuing creativity, flexibility, accessibility, and meaningful
+                connections for every moment.
               </p>
             </article>
           </div>
@@ -104,10 +118,11 @@ export default function AboutPage() {
 
       <section className={styles.cta}>
         <div className={styles.container}>
-          <h2>Ready to Book or Join?</h2>
+          <h2>Your Moments. Their Creativity. One Platform.</h2>
           <p>
-            Whether you&apos;re looking for the perfect photographer or
-            want to grow your photography business, we&apos;re here to help.
+            BookMyPhotografer is not just about booking a photographer. It&apos;s
+            about creating opportunities for creators and making professional
+            photography accessible to everyone.
           </p>
           <div className={styles.ctaButtons}>
             <Link href="/signup" className={styles.ctaPrimary}>
