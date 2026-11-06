@@ -362,7 +362,7 @@ export default function Home() {
         )}
       </section>
       <section className={styles.partners}>
-        <h2>Our Partner Companies</h2>
+        <h2>Our Esteemed Clients</h2>
         <p>Proud to work with amazing organizations</p>
         {partnersLoading ? (
           <p className={styles.partnerState} role="status">

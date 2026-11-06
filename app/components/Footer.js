@@ -50,7 +50,7 @@ export default function Footer() {
             unoptimized
           />
         </Link>
-        <p>Connecting customers with independent creative photographers,one booking at a time.</p>
+        <p>Connecting customers with independent creative photographers.</p>
         {/* <div className={styles.social}>
           <a href="https://facebook.com" aria-label="Facebook">
             <Image src={`${basePath}/facebook.svg`} alt="" width={17} height={17} />
