@@ -358,6 +358,11 @@
 .editLabel {
   display: block;
 }
+.requiredMarker {
+  color: #d32f2f;
+  font-weight: 700;
+  margin-left: 4px;
+}
 .editFieldWide {
   grid-column: 1 / -1;
 }
@@ -379,6 +384,14 @@
 .editField textarea {
   min-height: 92px;
   resize: vertical;
+}
+.editField .editError,
+.editField small.editError {
+  display: block;
+  margin-top: 0;
+  font-size: 10px;
+  line-height: 1.4;
+  color: #c62828;
 }
 .editField input[type="file"] {
   padding: 8px;
@@ -938,7 +951,7 @@
   color: #16806c;
 }
 .editError {
-  color: #87332c;
+  color: #c62828 !important;
 }
 .stateMessage,
 .errorState {

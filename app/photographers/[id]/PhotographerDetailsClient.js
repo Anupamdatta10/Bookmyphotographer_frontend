@@ -477,7 +477,7 @@ export default function PhotographerDetailsClient() {
                 </div>
                 <p className={styles.location}>● {location}</p>
                 <div className={styles.stats}>
-                  <span>
+                  {/* <span>
                     {Number(photographer.rating) > 0 ? (
                       <>
                         ★ <b>{Number(photographer.rating).toFixed(1)}</b> (
@@ -486,7 +486,7 @@ export default function PhotographerDetailsClient() {
                     ) : (
                       "No reviews yet"
                     )}
-                  </span>
+                  </span> */}
                   <span>♣ {experience || "No"} experience</span>
                 </div>
                 {specialties.length > 0 && (

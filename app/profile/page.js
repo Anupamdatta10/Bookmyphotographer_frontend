@@ -7,7 +7,10 @@ import { useRouter } from "next/navigation";
 import { ReactTags } from "react-tag-autocomplete";
 import Swal from "sweetalert2";
 import Navbar from "../components/Navbar";
-import { WEST_BENGAL_DISTRICTS } from "../constants/location";
+import {
+  WEST_BENGAL_DISTRICTS,
+  WEST_BENGAL_CITIES_BY_DISTRICT,
+} from "../constants/location";
 import styles from "./page.module.css";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
@@ -179,6 +182,45 @@ function SpecialtyTags({ value }) {
   );
 }
 
+function getFieldLabel(field) {
+  const labels = {
+    name: "Full name",
+    email: "Email address",
+    phone: "Phone",
+    country: "Country",
+    state: "State",
+    district: "District",
+    city: "City",
+    address1: "Address 1",
+    address2: "Address 2",
+    pincode: "Postal code",
+    proffession: "Profession",
+    specialties: "Specialties",
+    languages: "Languages",
+    experienceYears: "Experience (years)",
+    dob: "Date of birth",
+    bio: "Bio",
+    about: "About",
+  };
+  return labels[field] || field;
+}
+
+function normalizeLocationValue(value) {
+  return String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "_");
+}
+
+function getMatchingLocationOption(options, value) {
+  const normalizedValue = normalizeLocationValue(value);
+  return options.find(
+    (option) =>
+      normalizeLocationValue(option.value) === normalizedValue ||
+      normalizeLocationValue(option.label) === normalizedValue,
+  );
+}
+
 function getEditValue(profile, field) {
   if (field === "district") {
     const currentDistrict = String(profile.district ?? "").trim();
@@ -258,6 +300,9 @@ export default function ProfilePage() {
   const [selectedVideoPreviews, setSelectedVideoPreviews] = useState(() =>
     Array(maxProfileVideos).fill(""),
   );
+  const [videoErrors, setVideoErrors] = useState(() =>
+    Array(maxProfileVideos).fill(""),
+  );
   const imageInputRef = useRef(null);
   const identityProofInputRef = useRef(null);
   const videoInputRefs = useRef([]);
@@ -295,6 +340,27 @@ export default function ProfilePage() {
   const samplePreviewUrlsRef = useRef(Array(maxSamplePhotos).fill(""));
   const sampleFileInputRefs = useRef([]);
   const [galleryLoadFailed, setGalleryLoadFailed] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedCity, setSelectedCity] = useState("");
+  const [uploadErrors, setUploadErrors] = useState({});
+
+  const mandatoryFields = new Set([
+    "name",
+    "email",
+    "phone",
+    "country",
+    "state",
+    "district",
+    "city",
+    "address1",
+    "pincode",
+    "proffession",
+    "specialties",
+    "languages",
+    "experienceYears",
+    "dob",
+  ]);
 
   useEffect(() => {
     const rawProfile = window.localStorage.getItem(savedUserKey);
@@ -534,6 +600,23 @@ export default function ProfilePage() {
     const previewUrl = file ? URL.createObjectURL(file) : "";
     nextPreviewUrls[index] = previewUrl;
     videoPreviewUrlsRef.current = nextPreviewUrls;
+
+    const nextErrors = [...videoErrors];
+    nextErrors[index] = "";
+    setVideoErrors(nextErrors);
+
+    if (file && file.size > maxProfileVideoSize) {
+      nextErrors[index] = "Each photo or video must be 20 MB or smaller.";
+      setVideoErrors(nextErrors);
+      setSelectedVideoFiles((files) =>
+        files.map((currentFile, fileIndex) =>
+          fileIndex === index ? null : currentFile,
+        ),
+      );
+      setSelectedVideoPreviews(nextPreviewUrls);
+      return;
+    }
+
     setSelectedVideoFiles((files) =>
       files.map((currentFile, fileIndex) =>
         fileIndex === index ? file : currentFile,
@@ -568,6 +651,54 @@ export default function ProfilePage() {
     setSampleFiles(Array(maxSamplePhotos).fill(null));
   }
 
+  function getFieldError(field, fieldValue) {
+    const value = Array.isArray(fieldValue)
+      ? fieldValue
+      : String(fieldValue ?? "").trim();
+    const isEmpty = Array.isArray(value) ? value.length === 0 : !value;
+
+    if (mandatoryFields.has(field) && isEmpty) {
+      return `${getFieldLabel(field)} is required.`;
+    }
+    if (!isEmpty && field === "email" && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      return "Enter a valid email address.";
+    }
+    if (!isEmpty && field === "phone" && !/^[+\d][\d\s()-]{7,15}$/.test(value)) {
+      return "Enter a valid phone number.";
+    }
+    if (!isEmpty && field === "name" && value.length < 2) {
+      return "Full name must be at least 2 characters.";
+    }
+    if (!isEmpty && field === "pincode" && !/^\d{6}$/.test(value)) {
+      return "Postal code must be 6 digits.";
+    }
+    if (!isEmpty && field === "experienceYears" && (!/^\d+$/.test(value) || Number(value) < 0)) {
+      return "Experience years must be a valid non-negative number.";
+    }
+    if (!isEmpty && field === "dob") {
+      const isDateFormatValid = /^\d{4}-\d{2}-\d{2}$/.test(value);
+      const date = isDateFormatValid ? new Date(`${value}T00:00:00`) : null;
+      if (
+        !isDateFormatValid ||
+        Number.isNaN(date?.getTime()) ||
+        toDateValue(date) !== value ||
+        value > dobTodayValue
+      ) {
+        return "Enter a valid date of birth.";
+      }
+    }
+    return "";
+  }
+
+  function validateAndSetFieldError(field, fieldValue) {
+    const error = getFieldError(field, fieldValue);
+    setFieldErrors((currentErrors) => ({
+      ...currentErrors,
+      [field]: error,
+    }));
+    return !error;
+  }
+
   function cancelProfileEdit() {
     updateSelectedImage(null);
     updateSelectedIdentityProof(null);
@@ -597,6 +728,25 @@ export default function ProfilePage() {
     const shouldClearProfileImage = clearProfileImage;
     const hasSampleChanges =
       sampleFiles.some(Boolean) || deletedSamplePhotoIds.length > 0;
+    const nextUploadErrors = {};
+    const hasProfileImage =
+      Boolean(selectedImageFile) ||
+      Boolean(profile.profileImageUrl && !shouldClearProfileImage);
+    const hasIdentityProof =
+      Boolean(selectedIdentityProofFile) || Boolean(profile.identityProofUrl);
+
+    if (!hasProfileImage) {
+      nextUploadErrors.profileImage = "Profile image is required.";
+    }
+    if (isPhotographer && !hasIdentityProof) {
+      nextUploadErrors.identityProof = "Identity proof is required.";
+    }
+    setUploadErrors(nextUploadErrors);
+    if (!hasProfileImage || (isPhotographer && !hasIdentityProof)) {
+      setSaveMessage("Please complete all mandatory fields marked with *.");
+      setSaveMessageIsError(true);
+      return;
+    }
     if (imageFile?.size && !imageFile.type.startsWith("image/")) {
       setSaveMessage("Choose an image file.");
       setSaveMessageIsError(true);
@@ -652,6 +802,42 @@ export default function ProfilePage() {
     const value = (field) => String(formData.get(field) ?? "").trim();
     const pincode = value("pincode");
     const experienceYears = value("experienceYears");
+
+    const nextErrors = {};
+    let hasError = false;
+    mandatoryFields.forEach((field) => {
+      let fieldValue;
+      if (field === "specialties") {
+        fieldValue = specialtyTags
+          .map((tag) => tag.label.trim())
+          .filter(Boolean);
+      } else if (field === "languages") {
+        fieldValue = value(field)
+          .split(",")
+          .map((language) => language.trim())
+          .filter(Boolean);
+      } else {
+        fieldValue = value(field);
+      }
+      const fieldError = getFieldError(field, fieldValue);
+      if (fieldError) {
+        hasError = true;
+        nextErrors[field] = fieldError;
+      }
+    });
+
+    if (hasError) {
+      setFieldErrors(nextErrors);
+      setSaveMessage("Please fill in all mandatory fields marked with *.");
+      setSaveMessageIsError(true);
+      const firstInvalidField = Object.keys(nextErrors)[0];
+      window.requestAnimationFrame(() => {
+        document.getElementById(firstInvalidField)?.focus();
+      });
+      return;
+    }
+    setFieldErrors({});
+
     const nextValues = {
       name: value("name"),
       email: value("email"),
@@ -1072,6 +1258,17 @@ export default function ProfilePage() {
                     const currentDob = profile.dob
                       ? String(profile.dob).slice(0, 10)
                       : "";
+                    const districtOption = getMatchingLocationOption(
+                      WEST_BENGAL_DISTRICTS,
+                      profile.district,
+                    );
+                    const districtValue = districtOption?.value ?? normalizeLocationValue(profile.district);
+                    const cityOption = getMatchingLocationOption(
+                      WEST_BENGAL_CITIES_BY_DISTRICT[districtValue] ?? [],
+                      profile.city,
+                    );
+                    setSelectedDistrict(districtValue);
+                    setSelectedCity(cityOption?.value ?? normalizeLocationValue(profile.city));
                     const currentSpecialties = Array.isArray(profile.specialties)
                       ? profile.specialties
                       : profile.specialties
@@ -1122,7 +1319,7 @@ export default function ProfilePage() {
           )}
 
           {profile && isEditing && (
-            <form className={styles.editForm} onSubmit={submitProfile}>
+            <form className={styles.editForm} onSubmit={submitProfile} noValidate>
               {visibleEditableSections.map((section) => (
                 <section className={styles.editSection} key={section.title}>
                   <h2>{section.title}</h2>
@@ -1143,218 +1340,260 @@ export default function ProfilePage() {
                           }
                         >
                           {label}
+                          {mandatoryFields.has(field) && (
+                            <span
+                              className={styles.requiredMarker}
+                              aria-label="required"
+                            >
+                              *
+                            </span>
+                          )}
                         </label>
                         {type === "textarea" ? (
-                          <textarea
-                            id={field}
-                            name={field}
-                            rows={4}
-                            defaultValue={getEditValue(profile, field)}
-                          />
-                        ) : field === "specialties" ? (
-                          <ReactTags
-                            id="specialties-tags"
-                            classNames={{
-                              root: styles.tagInput,
-                              tagList: styles.tagList,
-                              tagListItem: styles.tagListItem,
-                              tag: styles.tag,
-                              tagName: styles.tagName,
-                              comboBox: styles.tagComboBox,
-                              input: styles.tagTextInput,
-                            }}
-                            labelText={label}
-                            placeholderText="Type and press Enter"
-                            activateFirstOption
-                            allowNew
-                            allowResize={false}
-                            renderInput={({ classNames, inputWidth, ...inputProps }) => (
-                              <input
-                                {...inputProps}
-                                className={classNames.input}
-                                style={{ width: inputWidth }}
-                                onKeyDown={(event) => {
-                                  inputProps.onKeyDown?.(event);
-                                  if (event.key === "Enter") {
-                                    event.preventDefault();
-                                  }
-                                }}
-                              />
+                          <>
+                            <textarea
+                              id={field}
+                              name={field}
+                              rows={4}
+                              defaultValue={getEditValue(profile, field)}
+                              onChange={(event) =>
+                                validateAndSetFieldError(field, event.target.value)
+                              }
+                              aria-invalid={Boolean(fieldErrors[field])}
+                            />
+                            {fieldErrors[field] && (
+                              <small className={styles.editError} role="alert">
+                                {fieldErrors[field]}
+                              </small>
                             )}
-                            selected={specialtyTags}
-                            onAdd={(tag) =>
-                              setSpecialtyTags((currentTags) =>
-                                currentTags.some(
+                          </>
+                        ) : field === "specialties" ? (
+                          <>
+                            <ReactTags
+                              id="specialties-tags"
+                              classNames={{
+                                root: styles.tagInput,
+                                tagList: styles.tagList,
+                                tagListItem: styles.tagListItem,
+                                tag: styles.tag,
+                                tagName: styles.tagName,
+                                comboBox: styles.tagComboBox,
+                                input: styles.tagTextInput,
+                              }}
+                              labelText={label}
+                              placeholderText="Type and press Enter"
+                              activateFirstOption
+                              allowNew
+                              allowResize={false}
+                              renderInput={({ classNames, inputWidth, ...inputProps }) => (
+                                <input
+                                  {...inputProps}
+                                  className={classNames.input}
+                                  style={{ width: inputWidth }}
+                                  onKeyDown={(event) => {
+                                    inputProps.onKeyDown?.(event);
+                                    if (event.key === "Enter") {
+                                      event.preventDefault();
+                                    }
+                                  }}
+                                />
+                              )}
+                              selected={specialtyTags}
+                              onAdd={(tag) => {
+                                setSpecialtyTags((currentTags) =>
+                                  currentTags.some(
+                                    (currentTag) =>
+                                      currentTag.label.toLowerCase() ===
+                                      tag.label.toLowerCase(),
+                                  )
+                                    ? currentTags
+                                    : [...currentTags, tag],
+                                );
+                                const nextTags = specialtyTags.some(
                                   (currentTag) =>
                                     currentTag.label.toLowerCase() ===
                                     tag.label.toLowerCase(),
                                 )
-                                  ? currentTags
-                                  : [...currentTags, tag],
-                              )
-                            }
-                            onDelete={(tagIndex) =>
-                              setSpecialtyTags((currentTags) =>
-                                currentTags.filter((_, index) => index !== tagIndex),
-                              )
-                            }
-                          />
+                                  ? specialtyTags
+                                  : [...specialtyTags, tag];
+                                validateAndSetFieldError(
+                                  "specialties",
+                                  nextTags.map((item) => item.label.trim()).filter(Boolean),
+                                );
+                              }}
+                              onDelete={(tagIndex) => {
+                                setSpecialtyTags((currentTags) =>
+                                  currentTags.filter((_, index) => index !== tagIndex),
+                                )
+                                validateAndSetFieldError(
+                                  "specialties",
+                                  specialtyTags.filter((_, index) => index !== tagIndex),
+                                );
+                              }}
+                            />
+                            {fieldErrors.specialties && (
+                              <small className={styles.editError} role="alert">
+                                {fieldErrors.specialties}
+                              </small>
+                            )}
+                          </>
                         ) : field === "dob" ? (
-                          <div className={styles.datePicker} ref={calendarRef}>
-                            <input type="hidden" name="dob" value={dobValue} />
-                            <button
-                              className={styles.datePickerTrigger}
-                              id="dob-picker"
-                              type="button"
-                              aria-haspopup="dialog"
-                              aria-expanded={isCalendarOpen}
-                              aria-controls="dob-calendar"
-                              onClick={() => setIsCalendarOpen((open) => !open)}
-                            >
-                              <span>{displayDate(dobValue)}</span>
-                              <span aria-hidden="true">▦</span>
-                            </button>
-                            {isCalendarOpen && (
-                              <div
-                                className={styles.calendarPopup}
-                                id="dob-calendar"
-                                role="dialog"
-                                aria-label="Date of birth calendar"
+                          <>
+                            <div className={styles.datePicker} ref={calendarRef}>
+                              <input type="hidden" name="dob" value={dobValue} />
+                              <button
+                                className={styles.datePickerTrigger}
+                                id="dob-picker"
+                                type="button"
+                                aria-haspopup="dialog"
+                                aria-expanded={isCalendarOpen}
+                                aria-controls="dob-calendar"
+                                onClick={() => setIsCalendarOpen((open) => !open)}
                               >
-                                <div className={styles.calendarHeader}>
-                                  <button
-                                    className={styles.calendarArrow}
-                                    type="button"
-                                    aria-label="Previous month"
-                                    disabled={
-                                      calendarYear === 1900 &&
-                                      calendarMonthIndex === 0
-                                    }
-                                    onClick={() =>
-                                      setCalendarMonth(
+                                <span>{displayDate(dobValue)}</span>
+                                <span aria-hidden="true">▦</span>
+                              </button>
+                              {isCalendarOpen && (
+                                <div
+                                  className={styles.calendarPopup}
+                                  id="dob-calendar"
+                                  role="dialog"
+                                  aria-label="Date of birth calendar"
+                                >
+                                  <div className={styles.calendarHeader}>
+                                    <button
+                                      className={styles.calendarArrow}
+                                      type="button"
+                                      aria-label="Previous month"
+                                      disabled={
+                                        calendarYear === 1900 &&
+                                        calendarMonthIndex === 0
+                                      }
+                                      onClick={() =>
+                                        setCalendarMonth(
                                         new Date(
                                           calendarYear,
                                           calendarMonthIndex - 1,
                                           1,
                                         ),
-                                      )
-                                    }
-                                  >
-                                    ‹
-                                  </button>
-                                  <select
-                                    aria-label="Month"
-                                    value={calendarMonthIndex}
-                                    onChange={(event) =>
-                                      setCalendarMonth(
+                                        )
+                                      }
+                                    >
+                                      ‹
+                                    </button>
+                                    <select
+                                      aria-label="Month"
+                                      value={calendarMonthIndex}
+                                      onChange={(event) =>
+                                        setCalendarMonth(
                                         new Date(
                                           calendarYear,
                                           Number(event.target.value),
                                           1,
                                         ),
-                                      )
+                                        )
                                     }
-                                  >
-                                    {monthNames.map((monthName, monthIndex) => (
-                                      <option
+                                    >
+                                      {monthNames.map((monthName, monthIndex) => (
+                                        <option
                                         value={monthIndex}
                                         key={monthName}
                                         disabled={
                                           calendarYear ===
                                             currentMonth.getFullYear() &&
-                                          monthIndex > currentMonth.getMonth()
+                                            monthIndex > currentMonth.getMonth()
                                         }
-                                      >
+                                        >
                                         {monthName}
-                                      </option>
-                                    ))}
-                                  </select>
-                                  <select
-                                    aria-label="Year"
-                                    value={calendarYear}
-                                    onChange={(event) => {
-                                      const selectedYear = Number(
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <select
+                                      aria-label="Year"
+                                      value={calendarYear}
+                                      onChange={(event) => {
+                                        const selectedYear = Number(
                                         event.target.value,
-                                      );
-                                      const selectedMonth =
+                                        );
+                                        const selectedMonth =
                                         selectedYear ===
-                                        currentMonth.getFullYear()
+                                          currentMonth.getFullYear()
                                           ? Math.min(
                                               calendarMonthIndex,
                                               currentMonth.getMonth(),
                                             )
                                           : calendarMonthIndex;
-                                      setCalendarMonth(
+                                        setCalendarMonth(
                                         new Date(
                                           selectedYear,
                                           selectedMonth,
                                           1,
                                         ),
-                                      );
-                                    }}
-                                  >
-                                    {yearOptions.map((year) => (
-                                      <option value={year} key={year}>
+                                        );
+                                      }}
+                                    >
+                                      {yearOptions.map((year) => (
+                                        <option value={year} key={year}>
                                         {year}
-                                      </option>
-                                    ))}
-                                  </select>
-                                  <button
-                                    className={styles.calendarArrow}
-                                    type="button"
-                                    aria-label="Next month"
-                                    disabled={
-                                      calendarYear >
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      className={styles.calendarArrow}
+                                      type="button"
+                                      aria-label="Next month"
+                                      disabled={
+                                        calendarYear >
                                         currentMonth.getFullYear() ||
-                                      (calendarYear ===
+                                        (calendarYear ===
                                         currentMonth.getFullYear() &&
                                         calendarMonthIndex >=
                                           currentMonth.getMonth())
-                                    }
-                                    onClick={() =>
-                                      setCalendarMonth(
+                                      }
+                                      onClick={() =>
+                                        setCalendarMonth(
                                         new Date(
                                           calendarYear,
                                           calendarMonthIndex + 1,
                                           1,
                                         ),
-                                      )
-                                    }
-                                  >
-                                    ›
-                                  </button>
-                                </div>
-                                <div className={styles.calendarGrid}>
-                                  {[
-                                    "Sun",
-                                    "Mon",
-                                    "Tue",
-                                    "Wed",
-                                    "Thu",
-                                    "Fri",
-                                    "Sat",
-                                  ].map((weekday) => (
-                                    <span
-                                      className={styles.calendarWeekday}
-                                      key={weekday}
+                                        )
+                                      }
                                     >
-                                      {weekday}
-                                    </span>
-                                  ))}
-                                  {calendarDays.map((day, index) => {
-                                    if (day === null) {
-                                      return <span key={`empty-${index}`} />;
-                                    }
-                                    const dayValue = toDateValue(
-                                      new Date(
+                                      ›
+                                    </button>
+                                  </div>
+                                  <div className={styles.calendarGrid}>
+                                    {[
+                                      "Sun",
+                                      "Mon",
+                                      "Tue",
+                                      "Wed",
+                                      "Thu",
+                                      "Fri",
+                                      "Sat",
+                                    ].map((weekday) => (
+                                      <span
+                                        className={styles.calendarWeekday}
+                                        key={weekday}
+                                      >
+                                        {weekday}
+                                      </span>
+                                    ))}
+                                    {calendarDays.map((day, index) => {
+                                      if (day === null) {
+                                        return <span key={`empty-${index}`} />;
+                                      }
+                                      const dayValue = toDateValue(
+                                        new Date(
                                         calendarYear,
                                         calendarMonthIndex,
                                         day,
-                                      ),
-                                    );
-                                    const isSelected = dayValue === dobValue;
-                                    return (
-                                      <button
+                                        ),
+                                      );
+                                      const isSelected = dayValue === dobValue;
+                                      return (
+                                        <button
                                         className={`${styles.calendarDay} ${isSelected ? styles.calendarDaySelected : ""}`}
                                         key={dayValue}
                                         type="button"
@@ -1364,26 +1603,34 @@ export default function ProfilePage() {
                                         onClick={() => {
                                           setDobValue(dayValue);
                                           setIsCalendarOpen(false);
+                                          validateAndSetFieldError("dob", dayValue);
                                         }}
-                                      >
+                                        >
                                         {day}
-                                      </button>
-                                    );
-                                  })}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                  <button
+                                    className={styles.calendarClear}
+                                    type="button"
+                                    onClick={() => {
+                                      setDobValue("");
+                                      setIsCalendarOpen(false);
+                                      validateAndSetFieldError("dob", "");
+                                    }}
+                                  >
+                                    Clear date
+                                  </button>
                                 </div>
-                                <button
-                                  className={styles.calendarClear}
-                                  type="button"
-                                  onClick={() => {
-                                    setDobValue("");
-                                    setIsCalendarOpen(false);
-                                  }}
-                                >
-                                  Clear date
-                                </button>
-                              </div>
+                              )}
+                            </div>
+                            {fieldErrors.dob && (
+                              <small className={styles.editError} role="alert">
+                                {fieldErrors.dob}
+                              </small>
                             )}
-                          </div>
+                          </>
                         ) : type === "computed" ? (
                           <input
                             id={field}
@@ -1394,43 +1641,107 @@ export default function ProfilePage() {
                             aria-readonly="true"
                           />
                         ) : field === "district" ? (
-                          <select
-                            id={field}
-                            name={field}
-                            defaultValue={getEditValue(profile, field)}
-                          >
-                            <option value="">Select district</option>
-                            {getEditValue(profile, field) &&
-                              !WEST_BENGAL_DISTRICTS.some(
-                                (district) =>
-                                  district.value === getEditValue(profile, field),
-                              ) && (
-                                <option value={getEditValue(profile, field)}>
-                                  {getEditValue(profile, field)}
+                          <>
+                            <select
+                              id={field}
+                              name={field}
+                              value={selectedDistrict}
+                              onChange={(event) => {
+                                const districtValue = event.target.value;
+                                setSelectedDistrict(districtValue);
+                                setSelectedCity("");
+                                validateAndSetFieldError(field, districtValue);
+                                validateAndSetFieldError("city", "");
+                              }}
+                              aria-invalid={Boolean(fieldErrors[field])}
+                            >
+                              <option value="">Select district</option>
+                              {getEditValue(profile, field) &&
+                                !WEST_BENGAL_DISTRICTS.some(
+                                  (district) =>
+                                    district.value === getEditValue(profile, field),
+                                ) && (
+                                  <option value={getEditValue(profile, field)}>
+                                    {getEditValue(profile, field)}
+                                  </option>
+                                )}
+                              {WEST_BENGAL_DISTRICTS.map((district) => (
+                                <option key={district.value} value={district.value}>
+                                  {district.label}
                                 </option>
+                              ))}
+                            </select>
+                            {fieldErrors.district && (
+                              <small className={styles.editError} role="alert">
+                                {fieldErrors.district}
+                              </small>
+                            )}
+                          </>
+                        ) : field === "city" ? (
+                          <>
+                            <select
+                              id={field}
+                              name={field}
+                              value={selectedCity}
+                              onChange={(event) => {
+                                const cityValue = event.target.value;
+                                setSelectedCity(cityValue);
+                                validateAndSetFieldError(field, cityValue);
+                              }}
+                              disabled={!selectedDistrict}
+                              aria-invalid={Boolean(fieldErrors[field])}
+                            >
+                              <option value="">Select city</option>
+                              {(WEST_BENGAL_CITIES_BY_DISTRICT[selectedDistrict] ?? []).map(
+                                (city) => (
+                                  <option key={city.value} value={city.value}>
+                                    {city.label}
+                                  </option>
+                                ),
                               )}
-                            {WEST_BENGAL_DISTRICTS.map((district) => (
-                              <option key={district.value} value={district.value}>
-                                {district.label}
-                              </option>
-                            ))}
-                          </select>
+                              {selectedCity &&
+                                !(WEST_BENGAL_CITIES_BY_DISTRICT[selectedDistrict] ?? []).some(
+                                  (city) => city.value === selectedCity,
+                                ) && (
+                                  <option value={selectedCity}>{selectedCity}</option>
+                                )}
+                            </select>
+                            {fieldErrors.city && (
+                              <small className={styles.editError} role="alert">
+                                {fieldErrors.city}
+                              </small>
+                            )}
+                          </>
                         ) : (
-                          <input
-                            id={field}
-                            name={field}
-                            type={type}
-                            defaultValue={getEditValue(profile, field)}
-                            required={field === "name" || field === "email"}
-                            min={field === "experienceYears" ? "0" : undefined}
-                            minLength={field === "name" ? "2" : undefined}
-                            maxLength={field === "name" ? "100" : undefined}
-                            step={
-                              field === "experienceYears" || field === "pincode"
-                                ? "1"
-                                : undefined
-                            }
-                          />
+                          <>
+                            <input
+                              id={field}
+                              name={field}
+                              type={type}
+                              defaultValue={getEditValue(profile, field)}
+                              required={field === "name" || field === "email"}
+                              onBlur={(event) =>
+                                validateAndSetFieldError(field, event.target.value)
+                              }
+                              onChange={(event) =>
+                                validateAndSetFieldError(field, event.target.value)
+                              }
+                              aria-invalid={Boolean(fieldErrors[field])}
+                              min={field === "experienceYears" ? "0" : undefined}
+                              minLength={field === "name" ? "2" : undefined}
+                              maxLength={field === "name" ? "100" : undefined}
+                              step={
+                                field === "experienceYears" || field === "pincode"
+                                  ? "1"
+                                  : undefined
+                              }
+                            />
+                            {fieldErrors[field] && (
+                              <small className={styles.editError}>
+                                {fieldErrors[field]}
+                              </small>
+                            )}
+                          </>
                         )}
                       </div>
                     ))}
@@ -1439,7 +1750,9 @@ export default function ProfilePage() {
               ))}
 
               <section className={styles.editSection}>
-                <h2>Profile image</h2>
+                <h2>
+                  Profile image <span className={styles.requiredMarker}>*</span>
+                </h2>
                 <div className={styles.imageUpload}>
                   <div className={styles.imagePreviewFrame}>
                     <Image
@@ -1484,6 +1797,10 @@ export default function ProfilePage() {
                               event.currentTarget.files?.[0] ?? null,
                             );
                             setSaveMessage("");
+                            setUploadErrors((errors) => ({
+                              ...errors,
+                              profileImage: "",
+                            }));
                           }}
                         />
                         <span>
@@ -1528,13 +1845,20 @@ export default function ProfilePage() {
                         {selectedImageFile.name}
                       </small>
                     )}
+                    {uploadErrors.profileImage && (
+                      <small className={styles.editError} role="alert">
+                        {uploadErrors.profileImage}
+                      </small>
+                    )}
                   </div>
                 </div>
               </section>
 
               {isPhotographer && (
                 <section className={styles.editSection}>
-                  <h2>Identity proof</h2>
+                  <h2>
+                    Identity proof <span className={styles.requiredMarker}>*</span>
+                  </h2>
                   <div className={styles.imageUpload}>
                     <div className={styles.imagePreviewFrame}>
                       <Image
@@ -1582,6 +1906,10 @@ export default function ProfilePage() {
                                 event.currentTarget.files?.[0] ?? null,
                               );
                               setSaveMessage("");
+                              setUploadErrors((errors) => ({
+                                ...errors,
+                                identityProof: "",
+                              }));
                             }}
                           />
                           <span>
@@ -1609,6 +1937,11 @@ export default function ProfilePage() {
                       {selectedIdentityProofFile && (
                         <small className={styles.imageFileName}>
                           {selectedIdentityProofFile.name}
+                        </small>
+                      )}
+                      {uploadErrors.identityProof && (
+                        <small className={styles.editError} role="alert">
+                          {uploadErrors.identityProof}
                         </small>
                       )}
                     </div>
@@ -1707,6 +2040,11 @@ export default function ProfilePage() {
                               {selectedVideoFiles[index] && (
                                 <small className={styles.imageFileName}>
                                   {selectedVideoFiles[index].name}
+                                </small>
+                              )}
+                              {videoErrors[index] && (
+                                <small className={styles.editError}>
+                                  {videoErrors[index]}
                                 </small>
                               )}
                               {(selectedVideoFiles[index] ||

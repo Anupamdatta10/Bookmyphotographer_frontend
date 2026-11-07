@@ -33,13 +33,13 @@ export default function PhotographerCard({ person }) {
               <span>No specialties listed</span>
             )}
           </div>
-          <p className={styles.rating}>
+          {/* <p className={styles.rating}>
             {person.rating > 0 ? (
               <>★ <b>{person.rating.toFixed(1)}</b> <small>({person.reviews} reviews)</small></>
             ) : (
               <small>No reviews yet</small>
             )}
-          </p>
+          </p> */}
         </div>
       </Link>
     </article>

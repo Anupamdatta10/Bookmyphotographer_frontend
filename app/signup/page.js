@@ -36,6 +36,7 @@ export default function SignUpPage() {
     setPendingUserType(selectedValue);
     setAcceptedTerms(false);
     setPhone("");
+    setFieldErrors((errors) => ({ ...errors, userType: "" }));
     setShowDisclaimerModal(true);
   }
 
@@ -90,9 +91,13 @@ export default function SignUpPage() {
     setErrorMessage("");
     const formData = new FormData(event.currentTarget);
     const nextFieldErrors = {};
+    if (!userType) {
+      nextFieldErrors.userType = "Please select an account type.";
+    }
     const requiredFields = [
       ["fullName", "full name"],
       ["email", "email address"],
+      ["phone", "mobile number"],
       ["password", "password"],
       ["confirmPassword", "confirm password"],
     ];
@@ -110,7 +115,7 @@ export default function SignUpPage() {
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       nextFieldErrors.email = "Enter a valid email address.";
     }
-    if (!/^\d{10}$/.test(normalizedPhone)) {
+    if (normalizedPhone && !/^\d{10}$/.test(normalizedPhone)) {
       nextFieldErrors.phone = "Enter a 10-digit phone number.";
     }
     if (String(password ?? "").trim() && password.length < 8) {
@@ -173,7 +178,7 @@ export default function SignUpPage() {
           </div>
           <form className={styles.form} onSubmit={submitForm} noValidate>
             <label className={styles.field}>
-              Account Type
+              <span className={styles.fieldLabel}>Account Type <span className={styles.requiredMarker} aria-hidden="true">*</span></span>
               <select
                 name="userType"
                 className={styles.typeSelect}
@@ -195,7 +200,7 @@ export default function SignUpPage() {
               {!userType && fieldErrors.userType && <span className={styles.fieldError} id="userType-error">{fieldErrors.userType}</span>}
             </label>
             <label className={styles.field}>
-              Full Name
+              <span className={styles.fieldLabel}>Full Name <span className={styles.requiredMarker} aria-hidden="true">*</span></span>
               <input
                 required
                 name="fullName"
@@ -207,7 +212,7 @@ export default function SignUpPage() {
               {fieldErrors.fullName && <span className={styles.fieldError} id="fullName-error">{fieldErrors.fullName}</span>}
             </label>
             <label className={styles.field}>
-              Email Address
+              <span className={styles.fieldLabel}>Email Address <span className={styles.requiredMarker} aria-hidden="true">*</span></span>
               <input
                 required
                 name="email"
@@ -220,7 +225,7 @@ export default function SignUpPage() {
               {fieldErrors.email && <span className={styles.fieldError} id="email-error">{fieldErrors.email}</span>}
             </label>
             <label className={styles.field}>
-              Mobile Number
+              <span className={styles.fieldLabel}>Mobile Number <span className={styles.requiredMarker} aria-hidden="true">*</span></span>
               <input
                 required
                 name="phone"
@@ -240,7 +245,7 @@ export default function SignUpPage() {
               {fieldErrors.phone && <span className={styles.fieldError} id="phone-error">{fieldErrors.phone}</span>}
             </label>
             <label className={styles.field}>
-              Password
+              <span className={styles.fieldLabel}>Password <span className={styles.requiredMarker} aria-hidden="true">*</span></span>
               <span className={styles.passwordInput}>
                 <input
                   required
@@ -275,7 +280,7 @@ export default function SignUpPage() {
               {fieldErrors.password && <span className={styles.fieldError} id="password-error">{fieldErrors.password}</span>}
             </label>
             <label className={styles.field}>
-              Confirm Password
+              <span className={styles.fieldLabel}>Confirm Password <span className={styles.requiredMarker} aria-hidden="true">*</span></span>
               <span className={styles.passwordInput}>
                 <input
                   required

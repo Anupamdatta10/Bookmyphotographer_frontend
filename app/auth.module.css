@@ -129,7 +129,16 @@
   color: #c4473b;
   font-size: 10px;
   font-weight: normal;
+}
+
+.requiredMarker {
+  color: #c4473b;
+  margin-left: 2px;
   line-height: 1.4;
+}
+
+.fieldLabel {
+  display: inline;
 }
 .field input {
   width: 100%;

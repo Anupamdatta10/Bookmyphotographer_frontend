@@ -424,9 +424,9 @@ export default function TermsAndConditionsPage() {
           <p><strong>BookMyFotographer — Connecting Customers. Empowering Creators.</strong></p>
         </article>
 
-        <Link className={styles.backLink} href="/signup">
+        {/* <Link className={styles.backLink} href="/signup">
           Back to Sign Up
-        </Link>
+        </Link> */}
       </section>
 
       <Footer />
