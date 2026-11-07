@@ -487,7 +487,7 @@ export default function PhotographerDetailsClient() {
                       "No reviews yet"
                     )}
                   </span>
-                  <span>♣ {experience || "5+ years"} experience</span>
+                  <span>♣ {experience || "No"} experience</span>
                 </div>
                 {specialties.length > 0 && (
                   <div className={styles.tags}>
