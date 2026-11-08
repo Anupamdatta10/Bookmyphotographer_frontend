@@ -346,6 +346,12 @@ export default function PhotographerDetailsClient() {
         return;
       }
 
+      const durationHours = Number(bookingForm.durationHours);
+      // if (!Number.isInteger(durationHours) || durationHours < 1 || durationHours > 24) {
+      //   setBookingError("Duration must be a whole number between 1 and 24.");
+      //   return;
+      // }
+
       // Validate no occupied dates in the form
       const hasOccupiedDate = bookingForm.eventDate.some((date) => {
         const dateKey = date?.slice(0, 10);
@@ -376,7 +382,7 @@ export default function PhotographerDetailsClient() {
             userId: user.userId,
             eventDate: bookingForm.eventDate.filter(Boolean),
             eventLocation: bookingForm.eventLocation,
-            durationHours: bookingForm.durationHours,
+            durationHours,
             notes: bookingForm.notes,
             specialRequirements: bookingForm.specialRequirements,
           }),
@@ -392,12 +398,19 @@ export default function PhotographerDetailsClient() {
         setBookingForm({
           eventDate: [],
           eventLocation: "",
-          durationHours: 4,
+          durationHours: "",
           notes: "",
           specialRequirements: "",
         });
         setSelectedDates([]);
         setShowBookingModal(false);
+        await Swal.fire({
+          icon: "success",
+          title: "Booking successful",
+          text: "Your booking request has been submitted successfully.",
+          confirmButtonText: "OK",
+          confirmButtonColor: "#16877e",
+        });
       } catch (err) {
         setBookingError(err.message || "Could not create booking. Please try again.");
       } finally {
@@ -1052,14 +1065,17 @@ export default function PhotographerDetailsClient() {
 
                                       <div className={styles.bookingFieldsGrid}>
                                   <div className={styles.modalField}>
-                                    <label htmlFor="durationHours">Duration (hours) *</label>
+                                    <label htmlFor="durationHours">Duration (hours/days) *</label>
                                     <input
-                                      type="number"
+                                      type="text"
                                       id="durationHours"
                                       value={bookingForm.durationHours}
-                                      onChange={(e) => setBookingForm((prev) => ({ ...prev, durationHours: parseInt(e.target.value) || 0 }))}
-                                      min="1"
-                                      max="24"
+                                      placeholder="e.g., 4 hours"
+                                      onChange={(e) => setBookingForm((prev) => ({
+                                        ...prev,
+                                        durationHours: e.target.value,
+                                      }))}
+                                     
                                       required
                                     />
                                   </div>

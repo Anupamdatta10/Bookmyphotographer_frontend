@@ -361,6 +361,29 @@ export default function ProfilePage() {
     "experienceYears",
     "dob",
   ]);
+  const partnerMandatoryFields = new Set([
+    "name",
+    "email",
+    "phone",
+    "country",
+    "state",
+    "district",
+    "city",
+    "address1",
+    "pincode",
+  ]);
+  const partnerEditableFields = new Set([
+    "name",
+    "email",
+    "phone",
+    "country",
+    "state",
+    "district",
+    "city",
+    "address1",
+    "address2",
+    "pincode",
+  ]);
 
   useEffect(() => {
     const rawProfile = window.localStorage.getItem(savedUserKey);
@@ -805,7 +828,8 @@ export default function ProfilePage() {
 
     const nextErrors = {};
     let hasError = false;
-    mandatoryFields.forEach((field) => {
+    const fieldsToValidate = isPartner ? partnerMandatoryFields : mandatoryFields;
+    fieldsToValidate.forEach((field) => {
       let fieldValue;
       if (field === "specialties") {
         fieldValue = specialtyTags
@@ -816,6 +840,12 @@ export default function ProfilePage() {
           .split(",")
           .map((language) => language.trim())
           .filter(Boolean);
+      } else if (field === "district") {
+        fieldValue = selectedDistrict;
+      } else if (field === "city") {
+        fieldValue = selectedCity;
+      } else if (field === "dob") {
+        fieldValue = dobValue;
       } else {
         fieldValue = value(field);
       }
@@ -844,8 +874,8 @@ export default function ProfilePage() {
       phone: value("phone"),
       country: value("country"),
       state: value("state"),
-      district: value("district"),
-      city: value("city"),
+      district: selectedDistrict,
+      city: selectedCity,
       address1: value("address1"),
       address2: value("address2"),
       pincode: pincode ? Number(pincode) : null,
@@ -858,12 +888,15 @@ export default function ProfilePage() {
         .map((language) => language.trim())
         .filter(Boolean),
       experienceYears: experienceYears ? Number(experienceYears) : null,
-      dob: value("dob") || null,
+      dob: dobValue || null,
       bio: value("bio"),
       about: value("about"),
     };
     const payload = Object.fromEntries(
       Object.entries(nextValues).filter(([field, nextValue]) => {
+        if (isPartner && !partnerEditableFields.has(field)) {
+          return false;
+        }
         const currentValue = profile[field];
         if (field === "specialties" || field === "languages") {
           const currentItems = Array.isArray(currentValue)
@@ -2153,7 +2186,7 @@ export default function ProfilePage() {
                 />
                 <div className={styles.identityCopy}>
                   <h2>{profile.name || "BookMyPhotografer user"}</h2>
-                  <p>{profile.type || "Member"}</p>
+                  <p>{profile.type == 'PARTNER'?'CLIENT':profile.type}</p>
                   <span>{profile.email}</span>
                 </div>
                 {!isPartner && (
