@@ -214,6 +214,16 @@
   line-height: 1.45;
   animation: alertEnter 180ms ease-out;
 }
+.formSuccess {
+  padding: 11px 12px;
+  border: 1px solid #b9dfc5;
+  border-left: 3px solid #278c4b;
+  border-radius: 4px;
+  background: #f2fbf5;
+  color: #216b3a;
+  font-size: 11px;
+  line-height: 1.45;
+}
 .formError svg {
   flex: 0 0 16px;
   width: 16px;
