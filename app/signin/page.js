@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "../auth.module.css";
 import Navbar from "../components/Navbar";
@@ -11,6 +11,19 @@ export default function SignInPage() {
   const [signedIn, setSignedIn] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [success] = useState(() =>
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("passwordReset") === "success"
+      ? "Password reset successfully. You can now sign in."
+      : "",
+  );
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("passwordReset") === "success") {
+      window.history.replaceState({}, "", "/signin");
+    }
+  }, []);
 
   async function submitForm(event) {
     event.preventDefault();
@@ -73,6 +86,7 @@ export default function SignInPage() {
             <p>Sign in to your account</p>
           </div>
           <form className={styles.form} onSubmit={submitForm}>
+                      {success && <p className={styles.formSuccess}>{success}</p>}
                       {error && <p className={styles.formError}>{error}</p>}
                       <label className={styles.field}>
                         Email Address
@@ -112,7 +126,7 @@ export default function SignInPage() {
                           </button>
                         </div>
                       </label>
-                      <Link className={styles.forgot} href="/signin">
+                      <Link className={styles.forgot} href="/forgot-password">
                         Forgot password?
                       </Link>
                       <button className={styles.submit} type="submit">
