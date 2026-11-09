@@ -622,7 +622,7 @@
   color: #dbe4e8;
   padding: 42px max(5.4%, calc((100% - 1240px) / 2)) 58px;
   display: grid;
-  grid-template-columns: 3fr 0.85fr 1fr 1.45fr;
+  grid-template-columns: 3fr 0.85fr 1.45fr;
   gap: 18px;
   font-size: 11px;
 }
@@ -660,20 +660,6 @@
   display: block;
   margin: 0 0 5px;
   color: #d5e0e2;
-}
-.footerLinkButton {
-  display: block;
-  margin: 0 0 5px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #d5e0e2;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.footerLinkButton:hover {
-  color: #8dc5ff;
 }
 .contactItem {
   display: grid !important;
