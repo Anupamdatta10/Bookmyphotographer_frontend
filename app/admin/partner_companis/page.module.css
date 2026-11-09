@@ -525,8 +525,14 @@
 	color: #b54277;
 }
 
-.socialLinkedin {
-	color: #176b91;
+.socialLinks a.socialYoutube {
+	border-color: #ff0033;
+	background: #ff0033;
+}
+
+.socialYoutube img {
+	width: 18px;
+	height: 18px;
 }
 
 .noSocialLinks {

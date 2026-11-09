@@ -7,6 +7,7 @@ import styles from "./page.module.css";
 
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
+const MAX_HERO_IMAGE_SIZE = 10 * 1024 * 1024;
 
 function getUploadUrl(path) {
   if (!path) return "";
@@ -108,8 +109,8 @@ export default function GalleryPage() {
         showMessage("error", `${file.name}: Not an image file.`);
         return false;
       }
-      if (file.size > 10 * 1024 * 1024) {
-        showMessage("error", `${file.name}: Must be less than 10MB.`);
+      if (file.size > MAX_HERO_IMAGE_SIZE) {
+        showMessage("error", `${file.name}: Maximum size is 10MB.`);
         return false;
       }
       return true;
@@ -380,7 +381,7 @@ export default function GalleryPage() {
               )}
             </div>
             <p className={styles.uploadHint}>
-             Max Size is 10MB each.
+              Maximum size: 10 MB per image.
             </p>
           </div>
 

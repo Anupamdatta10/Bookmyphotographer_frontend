@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { startTransition, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import adminStyles from "../page.module.css";
@@ -83,7 +84,7 @@ export default function PartnerCompaniesPage() {
 		description: "",
 		facebookUrl: "",
 		instagramUrl: "",
-		linkedinUrl: "",
+		youtubeUrl: "",
 		status: "Draft",
 	});
 
@@ -171,7 +172,7 @@ export default function PartnerCompaniesPage() {
 			description: "",
 			facebookUrl: "",
 			instagramUrl: "",
-			linkedinUrl: "",
+			youtubeUrl: "",
 			status: "Draft",
 		});
 	}
@@ -186,7 +187,7 @@ export default function PartnerCompaniesPage() {
 			description: formData.description.trim(),
 			facebookUrl: formData.facebookUrl.trim() || null,
 			instagramUrl: formData.instagramUrl.trim() || null,
-			linkedinUrl: formData.linkedinUrl.trim() || null,
+			youtubeUrl: formData.youtubeUrl.trim() || null,
 			status: formData.status,
 		};
 
@@ -299,7 +300,7 @@ export default function PartnerCompaniesPage() {
 									description: "",
 									facebookUrl: "",
 									instagramUrl: "",
-									linkedinUrl: "",
+									youtubeUrl: "",
 									status: "Draft",
 								});
 								setMessage("");
@@ -435,20 +436,25 @@ export default function PartnerCompaniesPage() {
 															◎
 														</a>
 													)}
-													{partner.linkedinUrl && (
+													{partner.youtubeUrl && (
 														<a
-															href={partner.linkedinUrl}
+															href={partner.youtubeUrl}
 															target="_blank"
 															rel="noreferrer"
-															aria-label={`${partner.name} on LinkedIn`}
-															className={styles.socialLinkedin}
+															aria-label={`${partner.name} on YouTube`}
+															className={styles.socialYoutube}
 														>
-															in
+															<Image
+																src={`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/youtube.svg`}
+																alt=""
+																width={18}
+																height={18}
+															/>
 														</a>
 													)}
 													{!partner.facebookUrl &&
 														!partner.instagramUrl &&
-														!partner.linkedinUrl && (
+														!partner.youtubeUrl && (
 															<span className={styles.noSocialLinks}>None</span>
 														)}
 												</div>
@@ -470,7 +476,7 @@ export default function PartnerCompaniesPage() {
 																description: partner.description || "",
 																facebookUrl: partner.facebookUrl || "",
 																instagramUrl: partner.instagramUrl || "",
-																linkedinUrl: partner.linkedinUrl || "",
+																youtubeUrl: partner.youtubeUrl || "",
 																status: partner.status || "Draft",
 															});
 															setSelectedImage(null);
@@ -623,14 +629,14 @@ export default function PartnerCompaniesPage() {
 									/>
 								</label>
 								<label>
-									LinkedIn URL
+									YouTube URL
 									<input
 										type="url"
 										maxLength={2048}
-										name="linkedinUrl"
-										value={formData.linkedinUrl}
-										onChange={(e) => setFormData({ ...formData, linkedinUrl: e.target.value })}
-										placeholder="https://linkedin.com/company/name"
+										name="youtubeUrl"
+										value={formData.youtubeUrl}
+										onChange={(e) => setFormData({ ...formData, youtubeUrl: e.target.value })}
+										placeholder="https://youtube.com/@channel"
 									/>
 								</label>
 							</fieldset>

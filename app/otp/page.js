@@ -157,24 +157,13 @@ export default function OtpPage() {
       return;
     }
 
-    const nextAttempt = resendAttempt + 1;
-    const delaySeconds = Math.min(
-      RESEND_BASE_DELAY_SECONDS * 2 ** nextAttempt,
-      RESEND_MAX_DELAY_SECONDS,
-    );
-    const availableAt = Date.now() + delaySeconds * 1000;
-
-    window.sessionStorage.setItem("otpResendAttempts", String(nextAttempt));
-    window.sessionStorage.setItem("otpResendAvailableAt", String(availableAt));
-    setResendAttempt(nextAttempt);
-    setResendRemaining(delaySeconds);
     setIsResending(true);
     setMessage("");
     setIsError(false)
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/first`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/signup`,
         {
           method: "POST",
           headers: {
@@ -190,6 +179,17 @@ export default function OtpPage() {
         return;
       }
 
+      const nextAttempt = resendAttempt + 1;
+      const delaySeconds = Math.min(
+        RESEND_BASE_DELAY_SECONDS * 2 ** nextAttempt,
+        RESEND_MAX_DELAY_SECONDS,
+      );
+      const availableAt = Date.now() + delaySeconds * 1000;
+
+      window.sessionStorage.setItem("otpResendAttempts", String(nextAttempt));
+      window.sessionStorage.setItem("otpResendAvailableAt", String(availableAt));
+      setResendAttempt(nextAttempt);
+      setResendRemaining(delaySeconds);
       setCode(Array(CODE_LENGTH).fill(""));
       inputRefs.current[0]?.focus();
       setMessage(result?.message || "A new verification code has been sent.");

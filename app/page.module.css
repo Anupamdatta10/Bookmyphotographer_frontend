@@ -604,8 +604,17 @@
 .partnerInstagram {
   color: #b54277;
 }
-.partnerLinkedin {
-  color: #176b91;
+.partnerYoutube {
+  display: grid;
+  width: 23px;
+  height: 17px;
+  place-items: center;
+  border-radius: 4px;
+  background: #ff0033;
+}
+.partnerYoutube img {
+  width: 18px;
+  height: 18px;
 }
 .footer {
   position: relative;

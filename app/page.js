@@ -427,15 +427,20 @@ export default function Home() {
                             ◎
                           </a>
                         )}
-                        {partner.linkedinUrl && (
+                        {partner.youtubeUrl && (
                           <a
-                            className={styles.partnerLinkedin}
-                            href={partner.linkedinUrl}
+                            className={styles.partnerYoutube}
+                            href={partner.youtubeUrl}
                             target="_blank"
                             rel="noreferrer"
-                            aria-label={`${partner.name} on LinkedIn`}
+                            aria-label={`${partner.name} on YouTube`}
                           >
-                            in
+                            <Image
+                              src={`${BASE_PATH}/youtube.svg`}
+                              alt=""
+                              width={18}
+                              height={18}
+                            />
                           </a>
                         )}
                       </div>
