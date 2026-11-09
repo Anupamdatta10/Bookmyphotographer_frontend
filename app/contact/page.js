@@ -11,10 +11,64 @@ const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 
 export default function ContactPage() {
   const [sent, setSent] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
 
-  function submitForm(event) {
+  async function submitForm(event) {
     event.preventDefault();
-    setSent(true);
+    const form = event.currentTarget;
+    setSending(true);
+    setSent(false);
+    setError("");
+
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
+    if (!backendUrl) {
+      setError(
+        "The contact form is temporarily unavailable. Please try again later.",
+      );
+      setSending(false);
+      return;
+    }
+
+    const formData = new FormData(event.currentTarget);
+    const submission = {
+      name: formData.get("name"),
+      email: formData.get("email"),
+      subject: formData.get("subject"),
+      message: formData.get("message"),
+    };
+
+    try {
+      const response = await fetch(
+        `${backendUrl.replace(/\/+$/, "")}/api/contact`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(submission),
+        },
+      );
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          typeof result?.message === "string"
+            ? result.message
+            : "We could not send your message. Please try again.",
+        );
+      }
+
+      form.reset();
+      setSent(true);
+    } catch (submitError) {
+      console.error("Contact form submission failed:", submitError);
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : "We could not send your message. Please try again.",
+      );
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
@@ -34,22 +88,54 @@ export default function ContactPage() {
           <form onSubmit={submitForm}>
             <label>
               Name
-              <input required placeholder="Enter your name" />
+              <input
+                required
+                name="name"
+                maxLength={100}
+                placeholder="Enter your name"
+              />
             </label>
             <label>
               Email
-              <input required type="email" placeholder="Enter your email" />
+              <input
+                required
+                name="email"
+                type="email"
+                maxLength={254}
+                placeholder="Enter your email"
+              />
             </label>
             <label>
               Subject
-              <input required placeholder="Enter subject" />
+              <input
+                required
+                name="subject"
+                maxLength={150}
+                placeholder="Enter subject"
+              />
             </label>
             <label>
               Message
-              <textarea required placeholder="Your message" rows="5" />
+              <textarea
+                required
+                name="message"
+                maxLength={5000}
+                placeholder="Your message"
+                rows="5"
+              />
             </label>
-            <button type="submit">
-              {sent ? "Message Sent ✓" : "Send Message"}
+            {sent && (
+              <p className={styles.formSuccess} role="status">
+                Your message has been sent successfully.
+              </p>
+            )}
+            {error && (
+              <p className={styles.formError} role="alert">
+                {error}
+              </p>
+            )}
+            <button type="submit" disabled={sending}>
+              {sending ? "Sending..." : "Send Message"}
             </button>
           </form>
           <aside>

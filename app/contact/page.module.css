@@ -225,6 +225,26 @@
     background: #1a76d9
 }
 
+.contactCard form button:disabled {
+    cursor: wait;
+    opacity: .7
+}
+
+.formSuccess,
+.formError {
+    margin: 0 0 16px;
+    font-size: 13px;
+    line-height: 1.5
+}
+
+.formSuccess {
+    color: #16704a
+}
+
+.formError {
+    color: #b42318
+}
+
 .contactCard aside {
     background: #f3f7f8;
     padding: 53px 42px
