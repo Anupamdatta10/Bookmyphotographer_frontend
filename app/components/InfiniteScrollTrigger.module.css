@@ -1,0 +1,31 @@
+.trigger {
+  min-height: 36px;
+  padding: 12px;
+  color: #718391;
+  font-size: 12px;
+  text-align: center;
+}
+
+.error {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 12px;
+  color: #9b3930;
+  font-size: 12px;
+  text-align: center;
+}
+
+.error p {
+  margin: 0;
+}
+
+.error button {
+  padding: 7px 12px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}

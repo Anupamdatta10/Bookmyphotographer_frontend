@@ -70,9 +70,10 @@ export default function AdminDashboardPage() {
   const loadDashboard = useCallback(async () => {
     const requests = await Promise.allSettled([
       fetchJson("users?page=1&limit=1", router),
-      fetchJson("users?type=PHOTOGRAPHER&page=1&limit=1000&sortBy=createdAt&sortOrder=desc", router),
+      fetchJson("users?type=PHOTOGRAPHER&page=1&limit=5&sortBy=createdAt&sortOrder=desc", router),
+      fetchJson("users?type=PHOTOGRAPHER&status=pending&page=1&limit=1", router),
       fetchJson("bookings/stats", router),
-      fetchJson("partner-companies", router),
+      fetchJson("partner-companies?page=1&limit=1", router),
       fetchJson("photo-galleries?page=1&limit=1", router),
       fetchJson("reviews?page=1&limit=1", router),
       fetchJson("hero-imgs/config", router),
@@ -81,17 +82,18 @@ export default function AdminDashboardPage() {
     const valueAt = (index) => requests[index].status === "fulfilled" ? requests[index].value : null;
     const users = valueAt(0);
     const photographers = valueAt(1);
-    const bookings = valueAt(2);
-    const partners = valueAt(3);
-    const galleries = valueAt(4);
-    const reviews = valueAt(5);
-    const hero = valueAt(6);
+    const pendingPhotographers = valueAt(2);
+    const bookings = valueAt(3);
+    const partners = valueAt(4);
+    const galleries = valueAt(5);
+    const reviews = valueAt(6);
+    const hero = valueAt(7);
     const photographerRecords = Array.isArray(photographers?.data) ? photographers.data : [];
 
     setStats({
       users: readMetric(users),
       photographers: readMetric(photographers),
-      pending: photographerRecords.filter((person) => person.status === "pending").length,
+      pending: readMetric(pendingPhotographers),
       bookings: bookings?.total ?? 0,
       bookingPending: bookings?.pending ?? 0,
       bookingConfirmed: bookings?.confirmed ?? 0,

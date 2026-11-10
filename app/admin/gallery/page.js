@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
@@ -303,7 +304,14 @@ export default function GalleryPage() {
               {heroImages.length > 0 ? (
                 heroImages.map((imgUrl, index) => (
                   <div key={index} className={styles.imagePreviewItem}>
-                    <img src={imgUrl} alt={config.hero.images[index]?.alt || `Hero ${index + 1}`} />
+                    <Image
+                      src={imgUrl}
+                      alt={config.hero.images[index]?.alt || `Hero ${index + 1}`}
+                      fill
+                      unoptimized
+                      sizes="(max-width: 700px) 100vw, 33vw"
+                      loading="lazy"
+                    />
                     <button
                       className={styles.deleteImageBtn}
                       onClick={() => handleDeleteHeroImage(index)}

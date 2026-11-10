@@ -1,9 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import InfiniteScrollTrigger from "../components/InfiniteScrollTrigger";
 import styles from "./page.module.css";
+
+const PAGE_SIZE = 10;
 
 const statusLabels = {
   pending: "Pending",
@@ -64,14 +67,21 @@ export default function AdminPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState("Pending");
   const [photographers, setPhotographers] = useState([]);
+  const [photographersPage, setPhotographersPage] = useState(1);
+  const [photographersTotal, setPhotographersTotal] = useState(0);
+  const [hasMorePhotographers, setHasMorePhotographers] = useState(false);
   const [isLoadingPhotographers, setIsLoadingPhotographers] = useState(true);
+  const [isLoadingMorePhotographers, setIsLoadingMorePhotographers] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState("");
   const [photographersError, setPhotographersError] = useState("");
   const [statusError, setStatusError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [savingPhotographerId, setSavingPhotographerId] = useState("");
+  const loadingMoreRef = useRef(false);
 
   useEffect(() => {
     let isCurrent = true;
+    const controller = new AbortController();
     const token = getAccessToken();
     if (!token) {
       router.replace("/admin/security");
@@ -80,11 +90,12 @@ export default function AdminPage() {
       };
     }
     fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users?type=PHOTOGRAPHER&page=1&limit=100&sortBy=createdAt&sortOrder=desc`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users?type=PHOTOGRAPHER&page=1&limit=${PAGE_SIZE}&sortBy=createdAt&sortOrder=desc&search=${encodeURIComponent(searchTerm.trim())}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        signal: controller.signal,
       },
     )
       .then(async (response) => {
@@ -105,10 +116,12 @@ export default function AdminPage() {
         if (isCurrent) {
           const users = Array.isArray(result?.data) ? result.data : [];
           setPhotographers(users.map(mapPhotographer));
+          setPhotographersTotal(Number(result?.total) || 0);
+          setHasMorePhotographers(Number(result?.total) > users.length);
         }
       })
       .catch((error) => {
-        if (isCurrent) {
+        if (isCurrent && error.name !== "AbortError") {
           setPhotographersError(
             error.message || "Could not load photographer records.",
           );
@@ -120,8 +133,9 @@ export default function AdminPage() {
 
     return () => {
       isCurrent = false;
+      controller.abort();
     };
-  }, [router]);
+  }, [router, searchTerm]);
 
   const filteredPhotographers = photographers.filter((photographer) => {
     const matchesTab = photographer.status === activeTab;
@@ -134,6 +148,43 @@ export default function AdminPage() {
         .includes(searchValue);
     return matchesTab && matchesSearch;
   });
+
+  const loadMorePhotographers = useCallback(async () => {
+    if (!hasMorePhotographers || loadingMoreRef.current) return;
+    loadingMoreRef.current = true;
+    setIsLoadingMorePhotographers(true);
+    setLoadMoreError("");
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        router.replace("/admin/security");
+        return;
+      }
+      const nextPage = photographersPage + 1;
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users?type=PHOTOGRAPHER&page=${nextPage}&limit=${PAGE_SIZE}&sortBy=createdAt&sortOrder=desc&search=${encodeURIComponent(searchTerm.trim())}`,
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+      if (response.status === 401) {
+        handleUnauthorized(router);
+        throw new Error("Your admin session has expired.");
+      }
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(result?.message || "Could not load more photographers.");
+      }
+      const users = Array.isArray(result?.data) ? result.data : [];
+      setPhotographers((current) => [...current, ...users.map(mapPhotographer)]);
+      setPhotographersPage(nextPage);
+      setPhotographersTotal(Number(result?.total) || 0);
+      setHasMorePhotographers(nextPage * PAGE_SIZE < Number(result?.total ?? nextPage * PAGE_SIZE + users.length));
+    } catch (error) {
+      setLoadMoreError(error.message || "Could not load more photographers.");
+    } finally {
+      loadingMoreRef.current = false;
+      setIsLoadingMorePhotographers(false);
+    }
+  }, [hasMorePhotographers, photographersPage, router, searchTerm]);
 
   async function updateStatus(id, status) {
     setSavingPhotographerId(id);
@@ -254,7 +305,14 @@ export default function AdminPage() {
                   placeholder="Search photographers"
                   aria-label="Search photographers"
                   value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
+                  onChange={(event) => {
+                    setSearchTerm(event.target.value);
+                    setIsLoadingPhotographers(true);
+                    setPhotographers([]);
+                    setLoadMoreError("");
+                    setPhotographersPage(1);
+                    setHasMorePhotographers(false);
+                  }}
                 />
               </label>
             </div>
@@ -421,9 +479,17 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
+            <InfiniteScrollTrigger
+              hasMore={hasMorePhotographers}
+              isLoading={isLoadingMorePhotographers}
+              onLoadMore={loadMorePhotographers}
+              error={loadMoreError}
+              onRetry={loadMorePhotographers}
+              loadingLabel="Loading more photographers..."
+            />
           </section>
           <p className={styles.footerNote}>
-            Showing {filteredPhotographers.length} of {photographers.length}{" "}
+            Showing {filteredPhotographers.length}; loaded {photographers.length} of {photographersTotal}{" "}
             photographers <span>Live records</span>
           </p>
     </div>

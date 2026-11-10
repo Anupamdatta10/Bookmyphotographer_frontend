@@ -3,11 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import InfiniteScrollTrigger from "../../../components/InfiniteScrollTrigger";
 import styles from "./page.module.css";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
 const FALLBACK_IMAGE = `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/defolt_profile_pic.jpg`;
+const GALLERY_PAGE_SIZE = 10;
 
 function getAccessToken() {
   try {
@@ -72,9 +74,14 @@ export default function PhotographerDetailsPage() {
   const photographerId = params?.id;
   const [photographer, setPhotographer] = useState(null);
   const [gallery, setGallery] = useState([]);
+  const [galleryPage, setGalleryPage] = useState(1);
+  const [galleryHasMore, setGalleryHasMore] = useState(false);
+  const [galleryLoadingMore, setGalleryLoadingMore] = useState(false);
+  const [galleryMoreError, setGalleryMoreError] = useState("");
   const [videos, setVideos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const galleryLoadingRef = useRef(false);
 
   useEffect(() => {
     if (!photographerId) return;
@@ -88,7 +95,7 @@ export default function PhotographerDetailsPage() {
         const [profileResponse, galleryResponse, videoResponse] = await Promise.all([
           fetch(`${BACKEND_URL}/api/users/${encodeURIComponent(photographerId)}`, { headers }),
           fetch(
-            `${BACKEND_URL}/api/photo-galleries/user/${encodeURIComponent(photographerId)}?page=1&limit=100&sortBy=sequence&sortOrder=asc`,
+            `${BACKEND_URL}/api/photo-galleries/user/${encodeURIComponent(photographerId)}?page=1&limit=${GALLERY_PAGE_SIZE}&sortBy=sequence&sortOrder=asc`,
           ),
           fetch(`${BACKEND_URL}/api/users/${encodeURIComponent(photographerId)}/profile-videos`, { headers }),
         ]);
@@ -115,6 +122,10 @@ export default function PhotographerDetailsPage() {
               ? galleryResult.data
               : [],
           );
+          const galleryRecords = Array.isArray(galleryResult?.data) ? galleryResult.data : [];
+          setGalleryPage(1);
+          setGalleryHasMore(Number(galleryResult?.total) > galleryRecords.length);
+          setGalleryMoreError("");
           setVideos(videoResponse.ok && Array.isArray(videoResult) ? videoResult : []);
         }
       } catch (loadError) {
@@ -129,6 +140,32 @@ export default function PhotographerDetailsPage() {
       current = false;
     };
   }, [photographerId, router]);
+
+  const loadMoreGallery = useCallback(async () => {
+    if (!galleryHasMore || galleryLoadingRef.current) return;
+    galleryLoadingRef.current = true;
+    setGalleryLoadingMore(true);
+    setGalleryMoreError("");
+    try {
+      const nextPage = galleryPage + 1;
+      const response = await fetch(
+        `${BACKEND_URL}/api/photo-galleries/user/${encodeURIComponent(photographerId)}?page=${nextPage}&limit=${GALLERY_PAGE_SIZE}&sortBy=sequence&sortOrder=asc`,
+      );
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(result?.message || "Could not load more portfolio photos.");
+      }
+      const records = Array.isArray(result?.data) ? result.data : [];
+      setGallery((current) => [...current, ...records]);
+      setGalleryPage(nextPage);
+      setGalleryHasMore(nextPage * GALLERY_PAGE_SIZE < Number(result?.total ?? nextPage * GALLERY_PAGE_SIZE + records.length));
+    } catch (loadError) {
+      setGalleryMoreError(loadError.message || "Could not load more portfolio photos.");
+    } finally {
+      galleryLoadingRef.current = false;
+      setGalleryLoadingMore(false);
+    }
+  }, [galleryHasMore, galleryPage, photographerId]);
 
   if (loading) return <div className={styles.state}>Loading photographer details...</div>;
   if (error) {
@@ -222,6 +259,14 @@ export default function PhotographerDetailsPage() {
             ) : (
               <p className={styles.emptyMedia}>Not available</p>
             )}
+            <InfiniteScrollTrigger
+              hasMore={galleryHasMore}
+              isLoading={galleryLoadingMore}
+              onLoadMore={loadMoreGallery}
+              error={galleryMoreError}
+              onRetry={loadMoreGallery}
+              loadingLabel="Loading more portfolio photos..."
+            />
           </section>
         </aside>
       </div>

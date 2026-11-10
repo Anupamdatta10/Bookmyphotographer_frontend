@@ -3,9 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
 import Footer from "../../components/Footer";
+import InfiniteScrollTrigger from "../../components/InfiniteScrollTrigger";
 import Navbar from "../../components/Navbar";
 import styles from "./page.module.css";
 
@@ -13,6 +14,7 @@ const weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "";
 const fallbackImage = `${basePath}/defolt_profile_pic.jpg`;
+const GALLERY_PAGE_SIZE = 10;
 
 function getImageUrl(path) {
   if (!path) return fallbackImage;
@@ -52,6 +54,11 @@ export default function PhotographerDetailsClient() {
   const [photographer, setPhotographer] = useState(null);
   const [profileVideos, setProfileVideos] = useState([]);
   const [galleryPhotos, setGalleryPhotos] = useState([]);
+  const [galleryPage, setGalleryPage] = useState(1);
+  const [galleryHasMore, setGalleryHasMore] = useState(false);
+  const [galleryLoadingMore, setGalleryLoadingMore] = useState(false);
+  const [galleryMoreError, setGalleryMoreError] = useState("");
+  const galleryLoadingRef = useRef(false);
   const [selectedMedia, setSelectedMedia] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [galleryLoading, setGalleryLoading] = useState(true);
@@ -169,6 +176,9 @@ export default function PhotographerDetailsClient() {
       setPhotographer(null);
       setProfileVideos([]);
       setGalleryPhotos([]);
+      setGalleryPage(1);
+      setGalleryHasMore(false);
+      setGalleryMoreError("");
       setSelectedMedia(null);
       setGalleryError("");
 
@@ -215,7 +225,7 @@ export default function PhotographerDetailsClient() {
 
         try {
           const galleryResponse = await fetch(
-            `${backendUrl}/api/photo-galleries/user/${encodeURIComponent(photographerId)}?limit=50&sortBy=sequence&sortOrder=asc`,
+            `${backendUrl}/api/photo-galleries/user/${encodeURIComponent(photographerId)}?page=1&limit=${GALLERY_PAGE_SIZE}&sortBy=sequence&sortOrder=asc`,
           );
           const galleryResult = await galleryResponse.json().catch(() => null);
           if (!galleryResponse.ok) {
@@ -227,6 +237,8 @@ export default function PhotographerDetailsClient() {
             const photos = Array.isArray(galleryResult?.data)
               ? galleryResult.data
               : [];
+            setGalleryPage(1);
+            setGalleryHasMore(Number(galleryResult?.total) > photos.length);
             setGalleryPhotos(
               photos
                 .filter((photo) => !photo.isProfileImage && photo.link)
@@ -256,6 +268,37 @@ export default function PhotographerDetailsClient() {
       isCurrent = false;
     };
   }, [photographerId]);
+
+  const loadMoreGallery = useCallback(async () => {
+    if (!galleryHasMore || galleryLoadingRef.current) return;
+    galleryLoadingRef.current = true;
+    setGalleryLoadingMore(true);
+    setGalleryMoreError("");
+    try {
+      const nextPage = galleryPage + 1;
+      const response = await fetch(
+        `${backendUrl}/api/photo-galleries/user/${encodeURIComponent(photographerId)}?page=${nextPage}&limit=${GALLERY_PAGE_SIZE}&sortBy=sequence&sortOrder=asc`,
+      );
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(result?.message || "Could not load more portfolio photos.");
+      }
+      const photos = Array.isArray(result?.data) ? result.data : [];
+      setGalleryPhotos((current) => [
+        ...current,
+        ...photos
+          .filter((photo) => !photo.isProfileImage && photo.link)
+          .sort((first, second) => first.sequence - second.sequence),
+      ]);
+      setGalleryPage(nextPage);
+      setGalleryHasMore(nextPage * GALLERY_PAGE_SIZE < Number(result?.total ?? nextPage * GALLERY_PAGE_SIZE + photos.length));
+    } catch (error) {
+      setGalleryMoreError(error.message || "Could not load more portfolio photos.");
+    } finally {
+      galleryLoadingRef.current = false;
+      setGalleryLoadingMore(false);
+    }
+  }, [galleryHasMore, galleryPage, photographerId]);
 
   const location = photographer
     ? [photographer.city, photographer.state, photographer.country]
@@ -724,6 +767,14 @@ export default function PhotographerDetailsClient() {
                                     portfolio photos or videos yet.
                                   </p>
                                 )}
+                                <InfiniteScrollTrigger
+                                  hasMore={galleryHasMore}
+                                  isLoading={galleryLoadingMore}
+                                  onLoadMore={loadMoreGallery}
+                                  error={galleryMoreError}
+                                  onRetry={loadMoreGallery}
+                                  loadingLabel="Loading more portfolio photos..."
+                                />
                               </section>
                               {selectedMedia && (
                                 <div

@@ -1,16 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import styles from "./page.module.css";
 import Navbar from "./components/Navbar";
 import PhotographerCard from "./components/PhotographerCard";
 import Footer from "./components/Footer";
+import InfiniteScrollTrigger from "./components/InfiniteScrollTrigger";
 import { WEST_BENGAL_DISTRICTS, WEST_BENGAL_CITIES_BY_DISTRICT } from "./constants/location";
 
 const defaultProfileImage = `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/defolt_profile_pic.jpg`;
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
+const PAGE_SIZE = 10;
 
 function getImageUrl(path) {
   if (!path) return defaultProfileImage;
@@ -50,9 +52,19 @@ export default function Home() {
   const [partners, setPartners] = useState([]);
   const [partnersLoading, setPartnersLoading] = useState(true);
   const [partnersError, setPartnersError] = useState("");
+  const [partnersPage, setPartnersPage] = useState(1);
+  const [partnersHasMore, setPartnersHasMore] = useState(false);
+  const [partnersLoadingMore, setPartnersLoadingMore] = useState(false);
+  const [partnersMoreError, setPartnersMoreError] = useState("");
+  const partnersLoadingRef = useRef(false);
   const [photographers, setPhotographers] = useState([]);
   const [photographersLoading, setPhotographersLoading] = useState(true);
   const [photographersError, setPhotographersError] = useState("");
+  const [photographersPage, setPhotographersPage] = useState(1);
+  const [photographersHasMore, setPhotographersHasMore] = useState(false);
+  const [photographersLoadingMore, setPhotographersLoadingMore] = useState(false);
+  const [photographersMoreError, setPhotographersMoreError] = useState("");
+  const photographersLoadingRef = useRef(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
@@ -130,7 +142,7 @@ export default function Home() {
   useEffect(() => {
     let isCurrent = true;
     fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/partner-companies?status=Published`,
+      `${BACKEND_URL}/api/partner-companies?status=Published&page=1&limit=${PAGE_SIZE}`,
     )
       .then(async (response) => {
         const result = await response.json().catch(() => null);
@@ -150,6 +162,8 @@ export default function Home() {
             id: String(partner._id ?? partner.id),
           })),
         );
+        setPartnersPage(1);
+        setPartnersHasMore(Number(result?.total) > publishedPartners.length);
       })
       .catch((error) => {
         if (isCurrent) {
@@ -164,6 +178,37 @@ export default function Home() {
       isCurrent = false;
     };
   }, []);
+
+  const loadMorePartners = useCallback(async () => {
+    if (!partnersHasMore || partnersLoadingRef.current) return;
+    partnersLoadingRef.current = true;
+    setPartnersLoadingMore(true);
+    setPartnersMoreError("");
+    try {
+      const nextPage = partnersPage + 1;
+      const response = await fetch(
+        `${BACKEND_URL}/api/partner-companies?status=Published&page=${nextPage}&limit=${PAGE_SIZE}`,
+      );
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(result?.message || "Could not load more partner companies.");
+      }
+      const records = (Array.isArray(result?.data) ? result.data : [])
+        .filter((partner) => partner.status === "Published")
+        .map((partner) => ({
+          ...partner,
+          id: String(partner._id ?? partner.id),
+        }));
+      setPartners((current) => [...current, ...records]);
+      setPartnersPage(nextPage);
+      setPartnersHasMore(nextPage * PAGE_SIZE < Number(result?.total ?? nextPage * PAGE_SIZE + records.length));
+    } catch (error) {
+      setPartnersMoreError(error.message || "Could not load more partner companies.");
+    } finally {
+      partnersLoadingRef.current = false;
+      setPartnersLoadingMore(false);
+    }
+  }, [partnersHasMore, partnersPage]);
 
   // Default fallback images if no custom hero images are set
   const defaultHeroImages = [
@@ -197,7 +242,11 @@ export default function Home() {
       setPhotographersLoading(true);
       setPhotographersError("");
 
-      const params = new URLSearchParams({ page: "1", limit: "100" });
+      setPhotographers([]);
+      setPhotographersPage(1);
+      setPhotographersHasMore(false);
+      setPhotographersMoreError("");
+      const params = new URLSearchParams({ page: "1", limit: String(PAGE_SIZE) });
       if (searchTerm.trim()) params.set("search", searchTerm.trim());
       if (selectedDistrict) {
         params.set("district", selectedDistrict);
@@ -236,6 +285,8 @@ export default function Home() {
               )
               .map(mapPhotographer),
           );
+          setPhotographersPage(1);
+          setPhotographersHasMore(Number(result?.total) > users.length);
         }
       } catch (error) {
         if (isCurrent && error.name !== "AbortError") {
@@ -253,6 +304,59 @@ export default function Home() {
       controller?.abort();
     };
   }, [searchTerm, selectedDistrict, selectedCity]);
+
+  const loadMorePhotographers = useCallback(async () => {
+    if (!photographersHasMore || photographersLoadingRef.current) return;
+    photographersLoadingRef.current = true;
+    setPhotographersLoadingMore(true);
+    setPhotographersMoreError("");
+
+    const params = new URLSearchParams({
+      page: String(photographersPage + 1),
+      limit: String(PAGE_SIZE),
+    });
+    if (searchTerm.trim()) params.set("search", searchTerm.trim());
+    if (selectedDistrict) {
+      params.set("district", selectedDistrict);
+      const districtCities = WEST_BENGAL_CITIES_BY_DISTRICT[selectedDistrict] || [];
+      if (districtCities.length) {
+        params.set("districtCities", districtCities.map((city) => city.value).join(","));
+      }
+    }
+    if (selectedCity) params.set("city", selectedCity);
+
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/photographers?${params.toString()}`);
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(result?.message || "Could not load more photographers.");
+      }
+      const users = Array.isArray(result?.data) ? result.data : [];
+      const normalizedSearch = searchTerm.trim().toLocaleLowerCase();
+      const records = users
+        .filter((user) => user.status === "active")
+        .filter((user) =>
+          normalizedSearch
+            ? String(user.name || "").toLocaleLowerCase().includes(normalizedSearch)
+            : true,
+        )
+        .map(mapPhotographer);
+      setPhotographers((current) => [...current, ...records]);
+      setPhotographersPage(photographersPage + 1);
+      setPhotographersHasMore((photographersPage + 1) * PAGE_SIZE < Number(result?.total ?? (photographersPage + 1) * PAGE_SIZE + users.length));
+    } catch (error) {
+      setPhotographersMoreError(error.message || "Could not load more photographers.");
+    } finally {
+      photographersLoadingRef.current = false;
+      setPhotographersLoadingMore(false);
+    }
+  }, [
+    photographersHasMore,
+    photographersPage,
+    searchTerm,
+    selectedCity,
+    selectedDistrict,
+  ]);
 
   function handleHeroPointerDown(event) {
     swipeStartX.current = null;
@@ -281,23 +385,36 @@ export default function Home() {
     swipeStartX.current = null;
   }
 
+  function resetPhotographerResults() {
+    setPhotographers([]);
+    setPhotographersPage(1);
+    setPhotographersHasMore(false);
+    setPhotographersMoreError("");
+    setPhotographersError("");
+    setPhotographersLoading(true);
+  }
+
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
+    resetPhotographerResults();
   };
 
   const handleClearFilters = () => {
     setSearchTerm("");
     setSelectedDistrict("");
     setSelectedCity("");
+    resetPhotographerResults();
   };
 
   const handleDistrictChange = (e) => {
     setSelectedDistrict(e.target.value);
     setSelectedCity("");
+    resetPhotographerResults();
   };
 
   const handleCityChange = (e) => {
     setSelectedCity(e.target.value);
+    resetPhotographerResults();
   };
 
   return (
@@ -451,6 +568,16 @@ export default function Home() {
             </div>
           </div>
         )}
+        {!partnersLoading && !partnersError && partners.length > 0 && (
+          <InfiniteScrollTrigger
+            hasMore={partnersHasMore}
+            isLoading={partnersLoadingMore}
+            onLoadMore={loadMorePartners}
+            error={partnersMoreError}
+            onRetry={loadMorePartners}
+            loadingLabel="Loading more partner companies..."
+          />
+        )}
       </section>
       <section id="photographers" className={styles.photographers}>
         <div className={styles.sectionHeading}>
@@ -537,14 +664,24 @@ export default function Home() {
             {photographersError}
           </p>
         ) : photographers.length ? (
-          <div id="photographer-listings" className={styles.grid}>
-            {photographers.map((person) => (
-              <PhotographerCard
-                key={person._id}
-                person={person}
-              />
-            ))}
-          </div>
+          <>
+            <div id="photographer-listings" className={styles.grid}>
+              {photographers.map((person) => (
+                <PhotographerCard
+                  key={person._id}
+                  person={person}
+                />
+              ))}
+            </div>
+            <InfiniteScrollTrigger
+              hasMore={photographersHasMore}
+              isLoading={photographersLoadingMore}
+              onLoadMore={loadMorePhotographers}
+              error={photographersMoreError}
+              onRetry={loadMorePhotographers}
+              loadingLabel="Loading more photographers..."
+            />
+          </>
         ) : (
           <p id="photographer-listings" className={styles.photographerState}>
             {searchTerm.trim() || selectedDistrict || selectedCity

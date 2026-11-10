@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
+import InfiniteScrollTrigger from "../../components/InfiniteScrollTrigger";
 import styles from "./page.module.css";
 
 const savedUserKey = "photoConnectUser";
@@ -84,6 +85,8 @@ export default function BookingsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalBookings, setTotalBookings] = useState(0);
   const [updatingBookingId, setUpdatingBookingId] = useState("");
+  const [loadMoreError, setLoadMoreError] = useState("");
+  const loadingMoreRef = useRef(false);
   const limit = 10;
 
   const fetchBookings = useCallback(async (isActive = () => true) => {
@@ -146,17 +149,31 @@ export default function BookingsPage() {
         const data = result?.data || [];
           const total = result?.total || 0;
           const totalPagesCalc = Math.ceil(total / limit) || 1;
-          setBookings(data);
+          setBookings((current) =>
+            currentPage === 1
+              ? data
+              : Array.from(
+                  new Map(
+                    [...current, ...data].map((booking) => [booking._id, booking]),
+                  ).values(),
+                ),
+          );
           setTotalPages(totalPagesCalc);
           setTotalBookings(total);
+          setLoadMoreError("");
           if (statsResponse.ok) setBookingStats(statsResult || {});
         }
       } catch (err) {
         if (isActive()) {
-          setError(err.message || "Could not load bookings. Please try again.");
+          const message = err.message || "Could not load bookings. Please try again.";
+          if (currentPage > 1) setLoadMoreError(message);
+          else setError(message);
         }
       } finally {
-        if (isActive()) setIsLoading(false);
+        if (isActive()) {
+          setIsLoading(false);
+          loadingMoreRef.current = false;
+        }
       }
     }, [currentPage, searchTerm, statusFilter, router]);
 
@@ -171,18 +188,29 @@ export default function BookingsPage() {
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
+    setBookings([]);
+    loadingMoreRef.current = false;
   };
 
   const handleStatusTab = (status) => {
     setStatusFilter(status);
     setCurrentPage(1);
+    setBookings([]);
+    loadingMoreRef.current = false;
   };
 
-  const handlePageChange = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+  const loadNextPage = useCallback(() => {
+    if (!isLoading && currentPage < totalPages && !loadingMoreRef.current) {
+      loadingMoreRef.current = true;
+      setLoadMoreError("");
+      setCurrentPage((page) => page + 1);
     }
-  };
+  }, [currentPage, isLoading, totalPages]);
+
+  const retryCurrentPage = useCallback(() => {
+    setLoadMoreError("");
+    void fetchBookings();
+  }, [fetchBookings]);
 
   const handleBookingStatus = async (booking, nextStatus) => {
     const action = {
@@ -337,6 +365,8 @@ export default function BookingsPage() {
                 onClick={() => {
                   setSearchTerm("");
                   setCurrentPage(1);
+                setBookings([]);
+                loadingMoreRef.current = false;
                 }}
               >
                 ×
@@ -499,32 +529,17 @@ export default function BookingsPage() {
                                   </table>
                                 </div>
 
-        {totalPages > 1 && (
-          <div className={styles.pagination}>
-            <button
-              className={styles.pageButton}
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage === 1}
-              aria-label="Previous page"
-            >
-              ‹
-            </button>
-            <span className={styles.pageInfo}>
-              Page {currentPage} of {totalPages}
-            </span>
-            <button
-              className={styles.pageButton}
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              aria-label="Next page"
-            >
-              ›
-            </button>
-          </div>
-        )}
+        <InfiniteScrollTrigger
+          hasMore={currentPage < totalPages}
+          isLoading={isLoading}
+          onLoadMore={loadNextPage}
+          error={loadMoreError}
+          onRetry={retryCurrentPage}
+          loadingLabel="Loading more bookings..."
+        />
 
         <p className={styles.footerNote}>
-          Showing {bookings.length} of {totalBookings} bookings <span>Live records</span>
+          Loaded {bookings.length} of {totalBookings} bookings <span>Live records</span>
         </p>
       </section>
     </div>

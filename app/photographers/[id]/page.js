@@ -2,6 +2,7 @@ import PhotographerDetailsClient from "./PhotographerDetailsClient";
 
 export async function generateStaticParams() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "";
+  const pageSize = 10;
   const fallbackParam = [{ id: "_" }];
 
   if (!backendUrl) {
@@ -9,26 +10,34 @@ export async function generateStaticParams() {
   }
 
   try {
-    const response = await fetch(
-      `${backendUrl}/api/users?type=PHOTOGRAPHER&page=1&limit=1000`,
-      { cache: "no-store" },
-    );
+    const params = [];
+    for (let page = 1; ; page += 1) {
+      const response = await fetch(
+        `${backendUrl}/api/users?type=PHOTOGRAPHER&page=${page}&limit=${pageSize}`,
+        { cache: "no-store" },
+      );
+      if (!response.ok) return fallbackParam;
 
-    if (!response.ok) {
-      return fallbackParam;
+      const result = await response.json();
+      const users = Array.isArray(result) ? result : result.data || [];
+      params.push(
+        ...users
+          .map((user) => {
+            const id = user._id || user.id || user.userId;
+            return typeof id === "string" ? { id } : null;
+          })
+          .filter(Boolean),
+      );
+
+      if (
+        users.length < pageSize ||
+        (Number.isFinite(result.total) && page * pageSize >= result.total)
+      ) {
+        break;
+      }
     }
 
-    const result = await response.json();
-    const users = Array.isArray(result) ? result : result.data || [];
-
-    const params = users
-      .map((user) => {
-        const id = user._id || user.id || user.userId;
-        return typeof id === "string" ? { id } : null;
-      })
-      .filter(Boolean);
-
-    return params.length > 0 ? params : fallbackParam;
+    return params.length ? params : fallbackParam;
   } catch {
     return fallbackParam;
   }

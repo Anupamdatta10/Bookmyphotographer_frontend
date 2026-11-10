@@ -1,12 +1,13 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReactTags } from "react-tag-autocomplete";
 import Swal from "sweetalert2";
 import Navbar from "../components/Navbar";
+import InfiniteScrollTrigger from "../components/InfiniteScrollTrigger";
 import {
   WEST_BENGAL_DISTRICTS,
   WEST_BENGAL_CITIES_BY_DISTRICT,
@@ -16,6 +17,7 @@ import styles from "./page.module.css";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const savedUserKey = "photoConnectUser";
 const maxSamplePhotos = 5;
+const GALLERY_PAGE_SIZE = 10;
 const maxSamplePhotoSize = 5 * 1024 * 1024;
 const maxProfileVideoSize = 20 * 1024 * 1024;
 const maxProfileVideos = 5;
@@ -327,6 +329,11 @@ export default function ProfilePage() {
   const [availabilityMessageIsError, setAvailabilityMessageIsError] =
     useState(false);
   const [galleryPhotos, setGalleryPhotos] = useState([]);
+  const [galleryPage, setGalleryPage] = useState(1);
+  const [galleryHasMore, setGalleryHasMore] = useState(false);
+  const [galleryLoadingMore, setGalleryLoadingMore] = useState(false);
+  const [galleryMoreError, setGalleryMoreError] = useState("");
+  const galleryLoadingRef = useRef(false);
   const [profileVideos, setProfileVideos] = useState([]);
   const [galleryLoading, setGalleryLoading] = useState(true);
   const [sampleFiles, setSampleFiles] = useState(() =>
@@ -446,7 +453,7 @@ export default function ProfilePage() {
     if (!photographerId || !isPhotographer) return;
     let isCurrent = true;
     fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/photo-galleries/user/${encodeURIComponent(photographerId)}?limit=50&sortBy=sequence&sortOrder=asc`,
+      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/photo-galleries/user/${encodeURIComponent(photographerId)}?page=1&limit=${GALLERY_PAGE_SIZE}&sortBy=sequence&sortOrder=asc`,
     )
       .then(async (response) => {
         const result = await response.json().catch(() => null);
@@ -458,6 +465,8 @@ export default function ProfilePage() {
       .then((result) => {
         if (!isCurrent) return;
         const photos = Array.isArray(result?.data) ? result.data : [];
+        setGalleryPage(1);
+        setGalleryHasMore(Number(result?.total) > photos.length);
         setGalleryPhotos(
           photos
             .filter((photo) => !photo.isProfileImage && photo.link)
@@ -479,6 +488,37 @@ export default function ProfilePage() {
       isCurrent = false;
     };
   }, [photographerId, isPhotographer]);
+
+  const loadMoreGalleryPhotos = useCallback(async () => {
+    if (!galleryHasMore || galleryLoadingRef.current || !photographerId) return;
+    galleryLoadingRef.current = true;
+    setGalleryLoadingMore(true);
+    setGalleryMoreError("");
+    try {
+      const nextPage = galleryPage + 1;
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/photo-galleries/user/${encodeURIComponent(photographerId)}?page=${nextPage}&limit=${GALLERY_PAGE_SIZE}&sortBy=sequence&sortOrder=asc`,
+      );
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(result?.message || "Could not load more portfolio photos.");
+      }
+      const photos = Array.isArray(result?.data) ? result.data : [];
+      setGalleryPhotos((current) => [
+        ...current,
+        ...photos
+          .filter((photo) => !photo.isProfileImage && photo.link)
+          .sort((first, second) => first.sequence - second.sequence),
+      ]);
+      setGalleryPage(nextPage);
+      setGalleryHasMore(nextPage * GALLERY_PAGE_SIZE < Number(result?.total ?? nextPage * GALLERY_PAGE_SIZE + photos.length));
+    } catch (error) {
+      setGalleryMoreError(error.message || "Could not load more portfolio photos.");
+    } finally {
+      galleryLoadingRef.current = false;
+      setGalleryLoadingMore(false);
+    }
+  }, [galleryHasMore, galleryPage, photographerId]);
 
   useEffect(() => {
     if (!photographerId || !isPhotographer) return;
@@ -2462,6 +2502,14 @@ export default function ProfilePage() {
                       No portfolio photos or videos uploaded yet.
                     </p>
                   )}
+                  <InfiniteScrollTrigger
+                    hasMore={galleryHasMore}
+                    isLoading={galleryLoadingMore}
+                    onLoadMore={loadMoreGalleryPhotos}
+                    error={galleryMoreError}
+                    onRetry={loadMoreGalleryPhotos}
+                    loadingLabel="Loading more portfolio photos..."
+                  />
                 </section>
               )}
             </>

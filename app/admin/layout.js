@@ -12,14 +12,25 @@ const navigation = [
   ["dashboard", "Dashboard", "⌂"],
   ["manage", "Manage Photographers", "♟"],
   ["bookings", "Bookings", "📋"],
+  ["clients", "Clients", "♙"],
   ["partners", "Partner Companies", "▣"],
   ["gallery", "Gallery / Banner", "▤"],
   ["admins", "Manage Admins", "♙"],
 ];
+const navigationHrefByKey = {
+  dashboard: "/admin/dashboard",
+  manage: "/admin",
+  bookings: "/admin/bookings",
+  clients: "/admin/clients",
+  partners: "/admin/partner_companis",
+  gallery: "/admin/gallery",
+  admins: "/admin/admins",
+};
 const pageTitleByPath = {
   "/admin": "Manage Photographers",
   "/admin/dashboard": "Dashboard",
   "/admin/bookings": "Bookings",
+  "/admin/clients": "Clients",
   "/admin/partner_companis": "Partner Companies",
   "/admin/gallery": "Gallery / Banner",
   "/admin/admins": "Manage Admins",
@@ -143,31 +154,23 @@ export default function AdminLayout({ children }) {
           {navigation
             .filter(([key]) => key !== "admins" || isSuperAdmin || canEditAdminProfile)
             .map(([key, label, icon]) => {
-              const href = key === "dashboard"
-                ? "/admin/dashboard"
-                          : key === "bookings"
-                            ? "/admin/bookings"
-                            : key === "partners"
-                              ? "/admin/partner_companis"
-                              : key === "admins"
-                                ? "/admin/admins"
-                                : key === "gallery"
-                                  ? "/admin/gallery"
-                                  : "/admin";
-                        const isActive = normalizedPathname === href;
+              const href = navigationHrefByKey[key] || "/admin";
+              const isActive =
+                normalizedPathname === href ||
+                (href !== "/admin" && normalizedPathname.startsWith(`${href}/`));
 
-                        return (
-                          <Link
-                            key={key}
-                            href={href}
-                            className={isActive ? styles.navItemActive : styles.navItem}
-                            onClick={() => setSidebarOpen(false)}
-                          >
-                            <span className={styles.navIcon}>{icon}</span>
-                            {label}
-                          </Link>
-                        );
-                      })}
+              return (
+                <Link
+                  key={key}
+                  href={href}
+                  className={isActive ? styles.navItemActive : styles.navItem}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <span className={styles.navIcon}>{icon}</span>
+                  {label}
+                </Link>
+              );
+            })}
           <button
             className={styles.navItem}
             type="button"

@@ -1,11 +1,13 @@
 "use client";
 
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import adminStyles from "../page.module.css";
+import InfiniteScrollTrigger from "../../components/InfiniteScrollTrigger";
 import styles from "./page.module.css";
 
 const savedUserKey = "photoConnectUser";
+const PAGE_SIZE = 10;
 
 function getAccessToken() {
 	try {
@@ -53,7 +55,13 @@ export default function AdminsPage() {
 	const router = useRouter();
 	const [accessToken, setAccessToken] = useState("");
 	const [admins, setAdmins] = useState([]);
+	const [totalAdmins, setTotalAdmins] = useState(0);
 	const [isLoading, setIsLoading] = useState(true);
+	const [isLoadingMore, setIsLoadingMore] = useState(false);
+	const [loadMoreError, setLoadMoreError] = useState("");
+	const [adminsPage, setAdminsPage] = useState(1);
+	const [hasMoreAdmins, setHasMoreAdmins] = useState(false);
+	const loadingMoreRef = useRef(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [deletingId, setDeletingId] = useState("");
 	const [searchTerm, setSearchTerm] = useState("");
@@ -78,9 +86,19 @@ export default function AdminsPage() {
 				}
 
 			startTransition(() => setAccessToken(user.accessToken));
-			adminRequest("", router)
+			const params = new URLSearchParams({
+				page: "1",
+				limit: String(PAGE_SIZE),
+			});
+			if (searchTerm.trim()) params.set("search", searchTerm.trim());
+			adminRequest(`?${params.toString()}`, router)
 				.then((result) => {
-					if (isCurrent) setAdmins(Array.isArray(result?.data) ? result.data : []);
+					if (isCurrent) {
+						const records = Array.isArray(result?.data) ? result.data : [];
+						setAdmins(records);
+						setTotalAdmins(Number(result?.total) || 0);
+						setHasMoreAdmins(Number(result?.total) > records.length);
+					}
 				})
 				.catch((error) => {
 					if (isCurrent) {
@@ -101,14 +119,34 @@ export default function AdminsPage() {
 		return () => {
 			isCurrent = false;
 		};
-	}, [router]);
+	}, [router, searchTerm]);
 
-	const filteredAdmins = admins.filter((admin) =>
-		[admin.name, admin.email]
-			.join(" ")
-			.toLowerCase()
-			.includes(searchTerm.trim().toLowerCase()),
-	);
+	const filteredAdmins = admins;
+
+	const loadMoreAdmins = useCallback(async () => {
+		if (!hasMoreAdmins || loadingMoreRef.current) return;
+		loadingMoreRef.current = true;
+		setIsLoadingMore(true);
+		setLoadMoreError("");
+		try {
+			const params = new URLSearchParams({
+				page: String(adminsPage + 1),
+				limit: String(PAGE_SIZE),
+			});
+			if (searchTerm.trim()) params.set("search", searchTerm.trim());
+			const result = await adminRequest(`?${params.toString()}`, router);
+			const records = Array.isArray(result?.data) ? result.data : [];
+			setAdmins((current) => [...current, ...records]);
+			setAdminsPage(adminsPage + 1);
+			setTotalAdmins(Number(result?.total) || 0);
+			setHasMoreAdmins((adminsPage + 1) * PAGE_SIZE < Number(result?.total ?? (adminsPage + 1) * PAGE_SIZE + records.length));
+		} catch (error) {
+			setLoadMoreError(error.message || "Could not load more admin accounts.");
+		} finally {
+			loadingMoreRef.current = false;
+			setIsLoadingMore(false);
+		}
+	}, [adminsPage, hasMoreAdmins, router, searchTerm]);
 
 	async function createAdmin(event) {
 		event.preventDefault();
@@ -126,7 +164,14 @@ export default function AdminsPage() {
 				method: "POST",
 				body: JSON.stringify(newAdmin),
 			});
-			setAdmins((currentAdmins) => [result, ...currentAdmins]);
+			const matchesSearch = [newAdmin.name, newAdmin.email]
+				.join(" ")
+				.toLowerCase()
+				.includes(searchTerm.trim().toLowerCase());
+			if (matchesSearch) {
+				setAdmins((currentAdmins) => [result, ...currentAdmins]);
+				setTotalAdmins((currentTotal) => currentTotal + 1);
+			}
 			setMessage(`${newAdmin.name} was created as an admin.`);
 			setMessageIsError(false);
 			setIsFormOpen(false);
@@ -149,6 +194,7 @@ export default function AdminsPage() {
 			setAdmins((currentAdmins) =>
 				currentAdmins.filter((item) => item._id !== admin._id),
 			);
+			setTotalAdmins((currentTotal) => Math.max(0, currentTotal - 1));
 			setMessage(`${admin.name}'s account was deleted.`);
 			setMessageIsError(false);
 		} catch (error) {
@@ -183,13 +229,13 @@ export default function AdminsPage() {
 					</div>
 
 					<div className={styles.metrics}>
-						<div><small>Admin accounts</small><strong>{admins.length}</strong></div>
+						<div><small>Admin accounts</small><strong>{totalAdmins}</strong></div>
 						<div><small>Profile details pending</small><strong>{admins.filter((admin) => !admin.phone && !admin.country && !admin.city).length}</strong></div>
 					</div>
 
 					<section className={styles.directory} aria-label="Admin accounts">
 						<header className={styles.directoryHeader}>
-							<div><h2>Admin accounts</h2><p>{filteredAdmins.length} accounts shown</p></div>
+							<div><h2>Admin accounts</h2><p>{filteredAdmins.length} of {totalAdmins} accounts shown</p></div>
 							<label className={styles.search}>
 								<svg className={styles.searchIcon} viewBox="0 0 24 24" aria-hidden="true">
 									<circle cx="11" cy="11" r="6" fill="none" stroke="currentColor" strokeWidth="2" />
@@ -200,7 +246,14 @@ export default function AdminsPage() {
 									value={searchTerm}
 									placeholder="Search admins"
 									aria-label="Search admin accounts"
-									onChange={(event) => setSearchTerm(event.target.value)}
+									onChange={(event) => {
+										setSearchTerm(event.target.value);
+										setIsLoading(true);
+										setAdmins([]);
+										setLoadMoreError("");
+										setAdminsPage(1);
+										setHasMoreAdmins(false);
+									}}
 								/>
 							</label>
 						</header>
@@ -225,6 +278,14 @@ export default function AdminsPage() {
 								</tbody>
 							</table>
 						</div>
+						<InfiniteScrollTrigger
+							hasMore={hasMoreAdmins}
+							isLoading={isLoadingMore}
+							onLoadMore={loadMoreAdmins}
+							error={loadMoreError}
+							onRetry={loadMoreAdmins}
+							loadingLabel="Loading more admin accounts..."
+						/>
 					</section>
 			</div>
 

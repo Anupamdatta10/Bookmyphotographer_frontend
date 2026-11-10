@@ -1,12 +1,14 @@
 "use client";
 
 import Image from "next/image";
-import { startTransition, useEffect, useState } from "react";
+import { startTransition, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import adminStyles from "../page.module.css";
+import InfiniteScrollTrigger from "../../components/InfiniteScrollTrigger";
 import styles from "./page.module.css";
 
 const savedUserKey = "photoConnectUser";
+const PAGE_SIZE = 10;
 
 function getImageUrl(imageUrl) {
 	if (!imageUrl) return "";
@@ -67,7 +69,13 @@ export default function PartnerCompaniesPage() {
 	const router = useRouter();
 	const [hasAdminAccess, setHasAdminAccess] = useState(false);
 	const [partners, setPartners] = useState([]);
+	const [totalPartners, setTotalPartners] = useState(0);
 	const [isLoading, setIsLoading] = useState(true);
+	const [isLoadingMore, setIsLoadingMore] = useState(false);
+	const [loadMoreError, setLoadMoreError] = useState("");
+	const [partnersPage, setPartnersPage] = useState(1);
+	const [hasMorePartners, setHasMorePartners] = useState(false);
+	const loadingMoreRef = useRef(false);
 	const [isSaving, setIsSaving] = useState(false);
 	const [deletingPartnerId, setDeletingPartnerId] = useState("");
 	const [searchTerm, setSearchTerm] = useState("");
@@ -90,6 +98,9 @@ export default function PartnerCompaniesPage() {
 
 	useEffect(() => {
 		let isCurrent = true;
+		const params = new URLSearchParams({ page: "1", limit: String(PAGE_SIZE) });
+		if (searchTerm.trim()) params.set("search", searchTerm.trim());
+		if (statusFilter !== "All statuses") params.set("status", statusFilter);
 		const savedUser = window.localStorage.getItem(savedUserKey);
 		if (!savedUser) {
 			router.replace("/admin/security");
@@ -120,14 +131,13 @@ export default function PartnerCompaniesPage() {
 		}
 
 		startTransition(() => setHasAdminAccess(true));
-		requestPartnerApi("", {}, router)
+		requestPartnerApi(`?${params.toString()}`, {}, router)
 			.then((result) => {
 				if (isCurrent) {
-					setPartners(
-						(Array.isArray(result?.data) ? result.data : []).map(
-							mapPartnerCompany,
-						),
-					);
+					const records = (Array.isArray(result?.data) ? result.data : []).map(mapPartnerCompany);
+					setPartners(records);
+					setTotalPartners(Number(result?.total) || 0);
+					setHasMorePartners(Number(result?.total) > records.length);
 				}
 			})
 			.catch((error) => {
@@ -143,24 +153,39 @@ export default function PartnerCompaniesPage() {
 		return () => {
 			isCurrent = false;
 		};
-	}, [router]);
+	}, [router, searchTerm, statusFilter]);
 
-	const searchValue = searchTerm.trim().toLowerCase();
-	const filteredPartners = partners.filter((partner) => {
-		const matchesSearch =
-			!searchValue ||
-			[partner.name, partner.description]
-				.join(" ")
-				.toLowerCase()
-				.includes(searchValue);
-		const matchesStatus =
-			statusFilter === "All statuses" || partner.status === statusFilter;
-		return matchesSearch && matchesStatus;
-	});
+	const filteredPartners = partners;
 	const publishedCount = partners.filter(
 		(partner) => partner.status === "Published",
 	).length;
 	const draftCount = partners.length - publishedCount;
+
+	const loadMorePartners = useCallback(async () => {
+		if (!hasMorePartners || loadingMoreRef.current) return;
+		loadingMoreRef.current = true;
+		setIsLoadingMore(true);
+		setLoadMoreError("");
+		try {
+			const params = new URLSearchParams({
+				page: String(partnersPage + 1),
+				limit: String(PAGE_SIZE),
+			});
+			if (searchTerm.trim()) params.set("search", searchTerm.trim());
+			if (statusFilter !== "All statuses") params.set("status", statusFilter);
+			const result = await requestPartnerApi(`?${params.toString()}`, {}, router);
+			const records = (Array.isArray(result?.data) ? result.data : []).map(mapPartnerCompany);
+			setPartners((current) => [...current, ...records]);
+			setPartnersPage(partnersPage + 1);
+			setTotalPartners(Number(result?.total) || 0);
+			setHasMorePartners((partnersPage + 1) * PAGE_SIZE < Number(result?.total ?? (partnersPage + 1) * PAGE_SIZE + records.length));
+		} catch (error) {
+			setLoadMoreError(error.message || "Could not load more partner companies.");
+		} finally {
+			loadingMoreRef.current = false;
+			setIsLoadingMore(false);
+		}
+	}, [hasMorePartners, partnersPage, router, searchTerm, statusFilter]);
 
 	function closeForm() {
 		setIsFormOpen(false);
@@ -211,13 +236,26 @@ export default function PartnerCompaniesPage() {
 				);
 				Object.assign(savedPartner, imageResult?.data ?? imageResult);
 			}
+			const matchesCurrentFilter =
+				(statusFilter === "All statuses" || savedPartner.status === statusFilter) &&
+				[ savedPartner.name, savedPartner.description ]
+					.join(" ")
+					.toLowerCase()
+					.includes(searchTerm.trim().toLowerCase());
 			setPartners((currentPartners) =>
 				editingPartner
-					? currentPartners.map((partner) =>
-							partner.id === editingPartner.id ? savedPartner : partner,
+					? currentPartners.flatMap((partner) =>
+							partner.id === editingPartner.id
+								? matchesCurrentFilter ? [savedPartner] : []
+								: [partner],
 						)
-					: [savedPartner, ...currentPartners],
+					: matchesCurrentFilter ? [savedPartner, ...currentPartners] : currentPartners,
 			);
+			if (!editingPartner && matchesCurrentFilter) {
+				setTotalPartners((total) => total + 1);
+			} else if (editingPartner && !matchesCurrentFilter) {
+				setTotalPartners((total) => Math.max(0, total - 1));
+			}
 			setMessage(`${nextPartner.name} ${editingPartner ? "updated" : "added"}.`);
 			setMessageIsError(false);
 			closeForm();
@@ -243,6 +281,7 @@ export default function PartnerCompaniesPage() {
 			setPartners((currentPartners) =>
 				currentPartners.filter((item) => item.id !== partner.id),
 			);
+			setTotalPartners((total) => Math.max(0, total - 1));
 			setMessage(`${partner.name} removed.`);
 			setMessageIsError(false);
 		} catch (error) {
@@ -314,15 +353,15 @@ export default function PartnerCompaniesPage() {
 					<div className={styles.summaryGrid}>
 						<div className={styles.summaryItem}>
 							<span className={styles.summaryIcon}>▣</span>
-							<div><small>Total companies</small><strong>{partners.length}</strong></div>
+							<div><small>Total companies</small><strong>{totalPartners}</strong></div>
 						</div>
 						<div className={styles.summaryItem}>
 							<span className={`${styles.summaryIcon} ${styles.publishedIcon}`}>✓</span>
-							<div><small>Published</small><strong>{publishedCount}</strong></div>
+							<div><small>Published (loaded)</small><strong>{publishedCount}</strong></div>
 						</div>
 						<div className={styles.summaryItem}>
 							<span className={`${styles.summaryIcon} ${styles.draftIcon}`}>◷</span>
-							<div><small>Drafts</small><strong>{draftCount}</strong></div>
+							<div><small>Drafts (loaded)</small><strong>{draftCount}</strong></div>
 						</div>
 					</div>
 
@@ -330,7 +369,7 @@ export default function PartnerCompaniesPage() {
 						<div className={styles.directoryHeader}>
 							<div>
 								<h2>Company directory</h2>
-								<p>{filteredPartners.length} companies shown</p>
+								<p>{filteredPartners.length} of {totalPartners} companies loaded</p>
 							</div>
 							<div className={styles.filters}>
 								<label className={styles.searchBox}>
@@ -340,14 +379,28 @@ export default function PartnerCompaniesPage() {
 										placeholder="Search companies"
 										aria-label="Search companies"
 										value={searchTerm}
-										onChange={(event) => setSearchTerm(event.target.value)}
+										onChange={(event) => {
+											setSearchTerm(event.target.value);
+											setIsLoading(true);
+											setPartners([]);
+											setLoadMoreError("");
+											setPartnersPage(1);
+											setHasMorePartners(false);
+										}}
 									/>
 								</label>
 								<select
 									className={styles.statusSelect}
 									aria-label="Filter by publication status"
 									value={statusFilter}
-									onChange={(event) => setStatusFilter(event.target.value)}
+									onChange={(event) => {
+										setStatusFilter(event.target.value);
+										setIsLoading(true);
+										setPartners([]);
+										setLoadMoreError("");
+										setPartnersPage(1);
+										setHasMorePartners(false);
+									}}
 								>
 									<option>All statuses</option>
 									<option>Published</option>
@@ -390,10 +443,14 @@ export default function PartnerCompaniesPage() {
 												<div className={styles.companyCell}>
 													{partner.imageUrl ? (
 														<div className={styles.companyImageWrapper}>
-															<img
+															<Image
 																className={styles.companyImage}
 																src={getImageUrl(partner.imageUrl)}
 																alt={`${partner.name} logo`}
+																fill
+																unoptimized
+																sizes="34px"
+																loading="lazy"
 															/>
 															<button
 																type="button"
@@ -509,6 +566,14 @@ export default function PartnerCompaniesPage() {
 								</tbody>
 							</table>
 						</div>
+						<InfiniteScrollTrigger
+							hasMore={hasMorePartners}
+							isLoading={isLoadingMore}
+							onLoadMore={loadMorePartners}
+							error={loadMoreError}
+							onRetry={loadMorePartners}
+							loadingLabel="Loading more partner companies..."
+						/>
 					</section>
 					<p className={adminStyles.footerNote}>
 							Partner companies are managed through the connected backend.
@@ -562,9 +627,13 @@ export default function PartnerCompaniesPage() {
 									Company image
 									{editingPartner?.imageUrl && (
 										<div className={styles.currentImagePreview}>
-											<img
+											<Image
 												src={getImageUrl(editingPartner.imageUrl)}
 												alt={`${editingPartner.name} current logo`}
+												width={40}
+												height={40}
+												unoptimized
+												loading="lazy"
 											/>
 											<span>Current image</span>
 										</div>
