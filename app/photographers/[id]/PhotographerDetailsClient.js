@@ -113,8 +113,8 @@ export default function PhotographerDetailsClient() {
     if (user.type?.toUpperCase() !== "PARTNER") {
       await Swal.fire({
         icon: "error",
-        title: "Partner account required",
-        text: "Only partner accounts can book photographers. Please sign in with a partner account.",
+        title: "Customer account required",
+        text: "Only customers can book photographers. Please sign in with a customer account.",
         confirmButtonText: "OK",
         confirmButtonColor: "#3085d6",
       });
@@ -184,7 +184,7 @@ export default function PhotographerDetailsClient() {
 
       try {
         const response = await fetch(
-          `${backendUrl}/api/users/${encodeURIComponent(photographerId)}`,
+          `${backendUrl}/api/photographers/${encodeURIComponent(photographerId)}`,
         );
         const result = await response.json().catch(() => null);
         if (!response.ok) {
@@ -449,8 +449,8 @@ export default function PhotographerDetailsClient() {
         setShowBookingModal(false);
         await Swal.fire({
           icon: "success",
-          title: "Booking successful",
-          text: "Your booking request has been submitted successfully.",
+          title: "Booking Request Processed",
+          text: "Your booking request has been submitted successfully. Our team will get back to you soon with further confirmation",
           confirmButtonText: "OK",
           confirmButtonColor: "#16877e",
         });
@@ -515,6 +515,13 @@ export default function PhotographerDetailsClient() {
                   <p>
                     <b>Experience</b>
                     {experience || "Not provided"}
+                  </p>
+                  <p>
+                    <b>Minimum Daily Fees</b>
+                    {photographer.minimumDailyFees !== null &&
+                    photographer.minimumDailyFees !== undefined
+                      ? `₹${Number(photographer.minimumDailyFees).toLocaleString("en-IN")} / day`
+                      : "Not provided"}
                   </p>
                   <p>
                     <b>Languages</b>

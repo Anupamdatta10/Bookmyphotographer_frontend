@@ -26,6 +26,13 @@ export default function PhotographerCard({ person }) {
         <div className={styles.cardInfo}>
           <h3>{person.name}</h3>
           <p className={styles.location}>● &nbsp;{person.location}</p>
+          {person.minimumDailyFees !== null &&
+            person.minimumDailyFees !== undefined &&
+            person.minimumDailyFees !== "" && (
+              <p className={styles.dailyFee}>
+                From ₹{Number(person.minimumDailyFees).toLocaleString("en-IN")} / day
+              </p>
+            )}
           <div className={styles.tags}>
             {person.tags.length ? (
               person.tags.slice(0, 3).map((tag) => <span key={tag}>{tag}</span>)

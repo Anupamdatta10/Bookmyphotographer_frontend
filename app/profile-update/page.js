@@ -45,12 +45,13 @@ export default function ProfileDetailsPage() {
     const requiredFields = [
       ["country", "country"],
       ["state", "state"],
-          ["district", "district"],
-          ["city", "city"],
-          ["address1", "address 1"],
-          ["file", "profile image"],
-          ["identityProof", "identity proof"],
-        ];
+      ["district", "district"],
+      ["city", "city"],
+      ["address1", "address 1"],
+      ["minimumDailyFees", "minimum daily fees"],
+      ["file", "profile image"],
+      ["identityProof", "identity proof"],
+    ];
 
     for (const [fieldName, label] of requiredFields) {
       const value = formData.get(fieldName);
@@ -59,6 +60,15 @@ export default function ProfileDetailsPage() {
           ? !value || value.size === 0
           : !String(value ?? "").trim();
       if (isMissing) nextFieldErrors[fieldName] = `Your ${label} is missing.`;
+    }
+
+    const minimumDailyFees = Number(formData.get("minimumDailyFees"));
+    if (
+      formData.get("minimumDailyFees") &&
+      (!Number.isFinite(minimumDailyFees) || minimumDailyFees < 0)
+    ) {
+      nextFieldErrors.minimumDailyFees =
+        "Enter a valid non-negative daily fee.";
     }
 
     if (file?.size && !file.type.startsWith("image/")) {
@@ -313,6 +323,40 @@ export default function ProfileDetailsPage() {
                 type="text"
                 placeholder="Apartment, suite, etc."
               />
+            </label>
+
+            <label className={styles.field}>
+              <div>
+                Minimum Daily Fees (₹) <span aria-hidden="true">*</span>
+              </div>
+              <input
+                name="minimumDailyFees"
+                type="number"
+                min="0"
+                step="any"
+                required
+                placeholder="Enter your minimum daily fee"
+                aria-invalid={Boolean(fieldErrors.minimumDailyFees)}
+                aria-describedby={
+                  fieldErrors.minimumDailyFees
+                    ? "minimum-daily-fees-error"
+                    : undefined
+                }
+                onChange={() =>
+                  setFieldErrors((errors) => ({
+                    ...errors,
+                    minimumDailyFees: "",
+                  }))
+                }
+              />
+              {fieldErrors.minimumDailyFees && (
+                <span
+                  className={styles.fieldError}
+                  id="minimum-daily-fees-error"
+                >
+                  {fieldErrors.minimumDailyFees}
+                </span>
+              )}
             </label>
 
             <div

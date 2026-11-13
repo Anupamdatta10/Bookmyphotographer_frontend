@@ -50,6 +50,10 @@
   margin-bottom: 30px;
 }
 
+.content article:first-of-type {
+  margin-top: 24px;
+}
+
 .content article h2 {
   margin-bottom: 9px;
   color: #173b4c;

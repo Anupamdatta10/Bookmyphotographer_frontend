@@ -13,6 +13,26 @@ const defaultProfileImage = `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/defolt_p
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
 const PAGE_SIZE = 10;
+const DAILY_FEE_RANGE_STEP = 600;
+const MAX_DAILY_FEE_RANGE = 6000;
+const DAILY_FEE_RANGES = Array.from(
+  { length: MAX_DAILY_FEE_RANGE / DAILY_FEE_RANGE_STEP },
+  (_, index) => {
+    const min = index * DAILY_FEE_RANGE_STEP;
+    const max = min + DAILY_FEE_RANGE_STEP;
+    return { value: `${min}:${max}`, label: `₹${min}–<₹${max}` };
+  },
+).concat({
+  value: `${MAX_DAILY_FEE_RANGE}:`,
+  label: `₹${MAX_DAILY_FEE_RANGE}+`,
+});
+
+function addDailyFeeRangeParams(params, range) {
+  if (!range) return;
+  const [min, max] = range.split(":");
+  params.set("minDailyFees", min);
+  if (max) params.set("maxDailyFees", max);
+}
 
 function getImageUrl(path) {
   if (!path) return defaultProfileImage;
@@ -68,6 +88,7 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [selectedDailyFeeRange, setSelectedDailyFeeRange] = useState("");
   const [heroConfig, setHeroConfig] = useState({
     images: [],
     title: "Find the Perfect\nPhotographer for Your Event",
@@ -259,6 +280,7 @@ export default function Home() {
         }
       }
       if (selectedCity) params.set("city", selectedCity);
+      addDailyFeeRangeParams(params, selectedDailyFeeRange);
 
       try {
         const response = await fetch(
@@ -303,7 +325,7 @@ export default function Home() {
       clearTimeout(timeoutId);
       controller?.abort();
     };
-  }, [searchTerm, selectedDistrict, selectedCity]);
+  }, [searchTerm, selectedDistrict, selectedCity, selectedDailyFeeRange]);
 
   const loadMorePhotographers = useCallback(async () => {
     if (!photographersHasMore || photographersLoadingRef.current) return;
@@ -324,6 +346,7 @@ export default function Home() {
       }
     }
     if (selectedCity) params.set("city", selectedCity);
+    addDailyFeeRangeParams(params, selectedDailyFeeRange);
 
     try {
       const response = await fetch(`${BACKEND_URL}/api/photographers?${params.toString()}`);
@@ -356,6 +379,7 @@ export default function Home() {
     searchTerm,
     selectedCity,
     selectedDistrict,
+    selectedDailyFeeRange,
   ]);
 
   function handleHeroPointerDown(event) {
@@ -403,6 +427,7 @@ export default function Home() {
     setSearchTerm("");
     setSelectedDistrict("");
     setSelectedCity("");
+    setSelectedDailyFeeRange("");
     resetPhotographerResults();
   };
 
@@ -644,14 +669,37 @@ export default function Home() {
               ))}
             </select>
           </div>
-          <button
-            className={styles.clearButton}
-            type="button"
-            onClick={handleClearFilters}
-            disabled={!searchTerm && !selectedDistrict && !selectedCity}
-          >
-            Clear
-          </button>
+          <div className={styles.priceFilters}>
+            <select
+              className={styles.priceFilter}
+              aria-label="Filter by daily fee range"
+              value={selectedDailyFeeRange}
+              onChange={(event) => {
+                setSelectedDailyFeeRange(event.target.value);
+                resetPhotographerResults();
+              }}
+            >
+              <option value="">All daily fees</option>
+              {DAILY_FEE_RANGES.map((range) => (
+                <option key={range.value} value={range.value}>
+                  {range.label}
+                </option>
+              ))}
+            </select>
+            <button
+              className={styles.clearButton}
+              type="button"
+              onClick={handleClearFilters}
+              disabled={
+                !searchTerm &&
+                !selectedDistrict &&
+                !selectedCity &&
+                !selectedDailyFeeRange
+              }
+            >
+              Clear
+            </button>
+          </div>
         </div>
 
         {photographersLoading ? (

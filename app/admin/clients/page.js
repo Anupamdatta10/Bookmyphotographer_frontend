@@ -24,10 +24,59 @@ export default function ClientsPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [loadError, setLoadError] = useState("");
   const [loadMoreError, setLoadMoreError] = useState("");
+  const [actionError, setActionError] = useState("");
+  const [savingClientId, setSavingClientId] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const loadingMoreRef = useRef(false);
+
+  async function toggleClientBlock(client) {
+    setSavingClientId(client.id);
+    setActionError("");
+    try {
+      const savedUser = JSON.parse(
+        window.localStorage.getItem(savedUserKey) || "null",
+      );
+      if (!savedUser?.accessToken) {
+        router.replace("/admin/security");
+        return;
+      }
+
+      const response = await fetch(
+        `${BACKEND_URL}/api/users/${encodeURIComponent(client.id)}/block`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${savedUser.accessToken}`,
+          },
+          body: JSON.stringify({ isBlocked: !client.isBlocked }),
+        },
+      );
+      const result = await response.json().catch(() => null);
+      if (response.status === 401 || response.status === 403) {
+        router.replace("/admin/security");
+        return;
+      }
+      if (!response.ok) {
+        throw new Error(result?.message || "Could not update client access.");
+      }
+
+      const updatedClient = result?.data ?? result;
+      setClients((current) =>
+        current.map((item) =>
+          item.id === client.id
+            ? { ...item, isBlocked: Boolean(updatedClient.isBlocked) }
+            : item,
+        ),
+      );
+    } catch (error) {
+      setActionError(error.message || "Could not update client access.");
+    } finally {
+      setSavingClientId("");
+    }
+  }
 
   useEffect(() => {
     let isCurrent = true;
@@ -187,13 +236,22 @@ export default function ClientsPage() {
                 <th scope="col">Phone</th>
                 <th scope="col">Location</th>
                 <th scope="col">Joined</th>
+                <th scope="col">Access</th>
+                <th scope="col">Action</th>
               </tr>
             </thead>
             <tbody>
               {isLoading && (
                 <tr>
-                  <td className={styles.empty} colSpan={5}>
+                  <td className={styles.empty} colSpan={7}>
                     Loading client accounts...
+                  </td>
+                </tr>
+              )}
+              {actionError && (
+                <tr>
+                  <td className={styles.error} colSpan={7} role="alert">
+                    {actionError}
                   </td>
                 </tr>
               )}
@@ -217,11 +275,28 @@ export default function ClientsPage() {
                         .join(", ") || "Not provided"}
                     </td>
                     <td>{formatDate(client.createdAt)}</td>
+                    <td>{client.isBlocked ? "Blocked" : "Active"}</td>
+                    <td>
+                      <button
+                        className={
+                          client.isBlocked ? styles.unblockButton : styles.blockButton
+                        }
+                        type="button"
+                        disabled={savingClientId === client.id}
+                        onClick={() => toggleClientBlock(client)}
+                      >
+                        {savingClientId === client.id
+                          ? "Saving..."
+                          : client.isBlocked
+                            ? "Unblock"
+                            : "Block"}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               {!isLoading && !loadError && clients.length === 0 && (
                 <tr>
-                  <td className={styles.empty} colSpan={5}>
+                  <td className={styles.empty} colSpan={7}>
                     {searchTerm.trim()
                       ? "No clients match your search."
                       : "No client accounts found."}

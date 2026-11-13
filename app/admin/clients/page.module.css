@@ -92,6 +92,32 @@
   text-decoration: underline;
 }
 
+.blockButton,
+.unblockButton {
+  padding: 7px 11px;
+  border: 0;
+  border-radius: 4px;
+  color: #fff;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.blockButton {
+  background: #d94d4d;
+}
+
+.unblockButton {
+  background: #16877e;
+}
+
+.blockButton:disabled,
+.unblockButton:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .empty {
   padding: 30px 17px !important;
   color: #8796a2 !important;

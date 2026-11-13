@@ -65,6 +65,7 @@ const editableSections = [
       ["specialties", "Specialties", "text"],
       ["languages", "Languages", "text"],
       ["experienceYears", "Experience (years)", "number"],
+      ["minimumDailyFees", "Minimum Daily Fees (₹)", "number"],
       ["dob", "Date of birth", "date"],
       ["age", "Age", "computed"],
       ["bio", "Bio", "textarea"],
@@ -102,6 +103,7 @@ const profileSections = [
       ["specialties", "Specialties"],
       ["languages", "Languages"],
       ["experienceYears", "Experience"],
+      ["minimumDailyFees", "Minimum Daily Fees"],
       ["dob", "Date of birth"],
       ["age", "Age"],
       ["bio", "Bio"],
@@ -157,6 +159,9 @@ function formatValue(field, value) {
   if (field === "experienceYears") {
     return `${value} years`;
   }
+  if (field === "minimumDailyFees") {
+    return `₹${Number(value).toLocaleString("en-IN")} / day`;
+  }
   if (field === "age") {
     return `${value} years`;
   }
@@ -200,6 +205,7 @@ function getFieldLabel(field) {
     specialties: "Specialties",
     languages: "Languages",
     experienceYears: "Experience (years)",
+    minimumDailyFees: "Minimum Daily Fees (₹)",
     dob: "Date of birth",
     bio: "Bio",
     about: "About",
@@ -366,6 +372,7 @@ export default function ProfilePage() {
     "specialties",
     "languages",
     "experienceYears",
+    "minimumDailyFees",
     "dob",
   ]);
   const partnerMandatoryFields = new Set([
@@ -738,6 +745,13 @@ export default function ProfilePage() {
     if (!isEmpty && field === "experienceYears" && (!/^\d+$/.test(value) || Number(value) < 0)) {
       return "Experience years must be a valid non-negative number.";
     }
+    if (
+      !isEmpty &&
+      field === "minimumDailyFees" &&
+      (!Number.isFinite(Number(value)) || Number(value) < 0)
+    ) {
+      return "Enter a valid non-negative daily fee.";
+    }
     if (!isEmpty && field === "dob") {
       const isDateFormatValid = /^\d{4}-\d{2}-\d{2}$/.test(value);
       const date = isDateFormatValid ? new Date(`${value}T00:00:00`) : null;
@@ -865,6 +879,7 @@ export default function ProfilePage() {
     const value = (field) => String(formData.get(field) ?? "").trim();
     const pincode = value("pincode");
     const experienceYears = value("experienceYears");
+    const minimumDailyFees = value("minimumDailyFees");
 
     const nextErrors = {};
     let hasError = false;
@@ -928,6 +943,7 @@ export default function ProfilePage() {
         .map((language) => language.trim())
         .filter(Boolean),
       experienceYears: experienceYears ? Number(experienceYears) : null,
+      minimumDailyFees: minimumDailyFees ? Number(minimumDailyFees) : null,
       dob: dobValue || null,
       bio: value("bio"),
       about: value("about"),
@@ -954,7 +970,11 @@ export default function ProfilePage() {
             : null;
           return nextValue !== currentDate;
         }
-        if (field === "pincode" || field === "experienceYears") {
+        if (
+          field === "pincode" ||
+          field === "experienceYears" ||
+          field === "minimumDailyFees"
+        ) {
           const currentNumber =
             currentValue === null || currentValue === undefined
               ? null
@@ -1800,13 +1820,21 @@ export default function ProfilePage() {
                                 validateAndSetFieldError(field, event.target.value)
                               }
                               aria-invalid={Boolean(fieldErrors[field])}
-                              min={field === "experienceYears" ? "0" : undefined}
+                              min={
+                                field === "experienceYears" ||
+                                field === "minimumDailyFees"
+                                  ? "0"
+                                  : undefined
+                              }
                               minLength={field === "name" ? "2" : undefined}
                               maxLength={field === "name" ? "100" : undefined}
                               step={
-                                field === "experienceYears" || field === "pincode"
-                                  ? "1"
-                                  : undefined
+                                field === "minimumDailyFees"
+                                  ? "any"
+                                  : field === "experienceYears" ||
+                                      field === "pincode"
+                                    ? "1"
+                                    : undefined
                               }
                             />
                             {fieldErrors[field] && (

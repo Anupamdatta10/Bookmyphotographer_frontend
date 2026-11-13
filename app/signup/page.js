@@ -22,8 +22,8 @@ export default function SignUpPage() {
   const router = useRouter();
 
   const userTypeOptions = [
-    { value: "PHOTOGRAPHER", label: "Register as a Photographer" },
-    { value: "PARTNER", label: "Book a Photographer" },
+    { value: "PHOTOGRAPHER", label: "Photographer" },
+    { value: "PARTNER", label: "Customer" },
   ];
 
   const disclaimerMessages = {

@@ -38,6 +38,7 @@ function mapPhotographer(user) {
         ? joinedDate.toLocaleDateString()
         : "Not available",
     status,
+    isBlocked: Boolean(user.isBlocked),
     initials: name
       .split(/\s+/)
       .filter(Boolean)
@@ -225,6 +226,49 @@ export default function AdminPage() {
     } catch (error) {
       setStatusError(
         error.message || "Could not update photographer status. Please try again.",
+      );
+    } finally {
+      setSavingPhotographerId("");
+    }
+  }
+
+  async function togglePhotographerBlock(photographer) {
+    setSavingPhotographerId(photographer.id);
+    setStatusError("");
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        router.replace("/admin/security");
+        return;
+      }
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/${encodeURIComponent(photographer.id)}/block`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ isBlocked: !photographer.isBlocked }),
+        },
+      );
+      if (response.status === 401 || response.status === 403) {
+        handleUnauthorized(router);
+        return;
+      }
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(result?.message || "Could not update photographer access.");
+      }
+      const updatedPhotographer = mapPhotographer(result?.data ?? result);
+      setPhotographers((current) =>
+        current.map((item) =>
+          item.id === photographer.id ? updatedPhotographer : item,
+        ),
+      );
+    } catch (error) {
+      setStatusError(
+        error.message || "Could not update photographer access. Please try again.",
       );
     } finally {
       setSavingPhotographerId("");
@@ -463,6 +507,17 @@ export default function AdminPage() {
                               Reactivate
                             </button>
                           )}
+                          <button
+                            className={
+                              photographer.isBlocked
+                                ? styles.approve
+                                : styles.reject
+                            }
+                            disabled={savingPhotographerId === photographer.id}
+                            onClick={() => togglePhotographerBlock(photographer)}
+                          >
+                            {photographer.isBlocked ? "Unblock" : "Block"}
+                          </button>
                         </div>
                       </td>
                     </tr>
