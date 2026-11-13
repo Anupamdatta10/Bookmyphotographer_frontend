@@ -13,19 +13,7 @@ const defaultProfileImage = `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/defolt_p
 const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "";
 const PAGE_SIZE = 10;
-const DAILY_FEE_RANGE_STEP = 600;
-const MAX_DAILY_FEE_RANGE = 6000;
-const DAILY_FEE_RANGES = Array.from(
-  { length: MAX_DAILY_FEE_RANGE / DAILY_FEE_RANGE_STEP },
-  (_, index) => {
-    const min = index * DAILY_FEE_RANGE_STEP;
-    const max = min + DAILY_FEE_RANGE_STEP;
-    return { value: `${min}:${max}`, label: `₹${min}–<₹${max}` };
-  },
-).concat({
-  value: `${MAX_DAILY_FEE_RANGE}:`,
-  label: `₹${MAX_DAILY_FEE_RANGE}+`,
-});
+const PRICE_RANGE_MIN = 0;
 
 function addDailyFeeRangeParams(params, range) {
   if (!range) return;
@@ -89,6 +77,13 @@ export default function Home() {
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedDailyFeeRange, setSelectedDailyFeeRange] = useState("");
+  const [priceRangeMax, setPriceRangeMax] = useState(0);
+  const [priceRangeLoaded, setPriceRangeLoaded] = useState(false);
+  const [priceRangeError, setPriceRangeError] = useState("");
+  const [priceBounds, setPriceBounds] = useState({
+    min: PRICE_RANGE_MIN,
+    max: 0,
+  });
   const [heroConfig, setHeroConfig] = useState({
     images: [],
     title: "Find the Perfect\nPhotographer for Your Event",
@@ -137,6 +132,43 @@ export default function Home() {
 
     return () => {
       window.removeEventListener("heroConfigChanged", handleCustomEvent);
+    };
+  }, []);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    fetch(`${BACKEND_URL}/api/photographers/stats`)
+      .then(async (response) => {
+        const result = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(result?.message || "Could not load photographer price range.");
+        }
+        return result;
+      })
+      .then((result) => {
+        const maximum = Number(result?.maxDailyFees);
+        if (!Number.isFinite(maximum) || maximum < 0) {
+          throw new Error("The photographer price range is invalid.");
+        }
+
+        if (isCurrent) {
+          const max = Math.ceil(maximum);
+          setPriceRangeMax(max);
+          setPriceBounds({ min: PRICE_RANGE_MIN, max });
+        }
+      })
+      .catch((error) => {
+        if (isCurrent) {
+          setPriceRangeError(error.message || "Could not load photographer price range.");
+        }
+      })
+      .finally(() => {
+        if (isCurrent) setPriceRangeLoaded(true);
+      });
+
+    return () => {
+      isCurrent = false;
     };
   }, []);
 
@@ -428,6 +460,23 @@ export default function Home() {
     setSelectedDistrict("");
     setSelectedCity("");
     setSelectedDailyFeeRange("");
+    setPriceBounds({ min: PRICE_RANGE_MIN, max: priceRangeMax });
+    resetPhotographerResults();
+  };
+
+  const handlePriceRangeChange = (type, nextValue) => {
+    const value = Number(nextValue);
+    if (!Number.isFinite(value) || !priceRangeMax) return;
+
+    const nextBounds = { ...priceBounds };
+    if (type === "min") {
+      nextBounds.min = Math.min(Math.max(value, PRICE_RANGE_MIN), priceBounds.max - 1);
+    } else {
+      nextBounds.max = Math.max(Math.min(value, priceRangeMax), priceBounds.min + 1);
+    }
+
+    setPriceBounds(nextBounds);
+    setSelectedDailyFeeRange(`${nextBounds.min}:${nextBounds.max}`);
     resetPhotographerResults();
   };
 
@@ -670,22 +719,48 @@ export default function Home() {
             </select>
           </div>
           <div className={styles.priceFilters}>
-            <select
-              className={styles.priceFilter}
-              aria-label="Filter by daily fee range"
-              value={selectedDailyFeeRange}
-              onChange={(event) => {
-                setSelectedDailyFeeRange(event.target.value);
-                resetPhotographerResults();
-              }}
-            >
-              <option value="">All daily fees</option>
-              {DAILY_FEE_RANGES.map((range) => (
-                <option key={range.value} value={range.value}>
-                  {range.label}
-                </option>
-              ))}
-            </select>
+            <div className={styles.priceControl}>
+              <h3 className={styles.priceTitle}>Price and Deals</h3>
+              <div className={styles.priceRangeCard}>
+                <div className={styles.priceRangeValue}>
+                  ₹{priceBounds.min.toLocaleString()} — ₹{priceBounds.max.toLocaleString()}+
+                </div>
+                <div className={styles.priceSlider}>
+                  <div
+                    className={styles.priceSliderRange}
+                    style={{
+                      left: `${priceRangeMax ? (priceBounds.min / priceRangeMax) * 100 : 0}%`,
+                      width: `${priceRangeMax ? ((priceBounds.max - priceBounds.min) / priceRangeMax) * 100 : 0}%`,
+                    }}
+                  />
+                  <input
+                    type="range"
+                    min={PRICE_RANGE_MIN}
+                    max={priceRangeMax}
+                    step={1}
+                    value={priceBounds.min}
+                    aria-label="Minimum price"
+                    onChange={(event) => handlePriceRangeChange("min", event.target.value)}
+                    disabled={!priceRangeLoaded || !priceRangeMax || Boolean(priceRangeError)}
+                  />
+                  <input
+                    type="range"
+                    min={PRICE_RANGE_MIN}
+                    max={priceRangeMax}
+                    step={1}
+                    value={priceBounds.max}
+                    aria-label="Maximum price"
+                    onChange={(event) => handlePriceRangeChange("max", event.target.value)}
+                    disabled={!priceRangeLoaded || !priceRangeMax || Boolean(priceRangeError)}
+                  />
+                </div>
+                {priceRangeError && (
+                  <p className={styles.priceRangeMessage} role="alert">
+                    {priceRangeError}
+                  </p>
+                )}
+              </div>
+            </div>
             <button
               className={styles.clearButton}
               type="button"

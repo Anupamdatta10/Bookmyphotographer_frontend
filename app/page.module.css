@@ -232,6 +232,136 @@
   transform: translateY(2px);
 }
 
+.priceTitle {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.priceControl {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.priceRangeCard {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 42px;
+  background: #efefef;
+  border-radius: 6px;
+  padding: 4px 10px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.priceRangeValue {
+  flex: 0 0 auto;
+  margin: 0;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
+  color: #101010;
+}
+
+.priceSlider {
+  position: relative;
+  flex: 1;
+  min-width: 54px;
+  width: 100%;
+  height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.priceSliderRange {
+  position: absolute;
+  top: 50%;
+  height: 6px;
+  border-radius: 999px;
+  background: #0b6eb7;
+  transform: translateY(-50%);
+  box-shadow: 0 0 0 1px rgba(11, 110, 183, 0.15);
+}
+
+.priceSlider input[type="range"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  background: transparent;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.priceSlider input[type="range"]::-webkit-slider-runnable-track {
+  height: 6px;
+  background: transparent;
+  border-radius: 999px;
+}
+
+.priceSlider input[type="range"]::-moz-range-track {
+  height: 6px;
+  background: transparent;
+  border-radius: 999px;
+}
+
+.priceSlider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -8px;
+  border: 0;
+  border-radius: 50%;
+  background: #0b6eb7;
+  box-shadow: 0 0 0 5px rgba(15, 16, 20, 0.04);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.priceSlider input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: #0b6eb7;
+  box-shadow: 0 0 0 5px rgba(15, 16, 20, 0.04);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.priceSlider input[type="range"]:focus {
+  outline: none;
+}
+
+.priceSlider input[type="range"]:disabled::-webkit-slider-thumb {
+  cursor: not-allowed;
+  background: #9aa5b1;
+}
+
+.priceSlider input[type="range"]:disabled::-moz-range-thumb {
+  cursor: not-allowed;
+  background: #9aa5b1;
+}
+
+.priceRangeMessage {
+  margin: 4px 0 0;
+  color: #a33b32;
+  font-size: 12px;
+}
+
 /* Search Section */
 .filterSection {
   margin-bottom: 24px;
@@ -312,28 +442,10 @@
 
 .priceFilters {
   display: flex;
-  flex: 1 1 300px;
+  align-items: flex-end;
+  flex: 1 1 340px;
   min-width: 0;
   gap: 8px;
-}
-
-.priceFilter {
-  flex: 1;
-  min-width: 0;
-  padding: 12px 16px;
-  border: 1px solid #d1d9de;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #102533;
-  background: #fff;
-  cursor: pointer;
-  transition: border-color 160ms ease, box-shadow 160ms ease;
-}
-
-.priceFilter:focus {
-  outline: none;
-  border-color: #1878f2;
-  box-shadow: 0 0 0 3px #1878f233;
 }
 
 .clearButton {
