@@ -274,14 +274,14 @@
   overflow-wrap: anywhere;
 }
 
-.tableWrap th:nth-child(1) { width: 8%; }
+.tableWrap th:nth-child(1) { width: 19%; }
 .tableWrap th:nth-child(2) { width: 13%; }
 .tableWrap th:nth-child(3) { width: 14%; }
 .tableWrap th:nth-child(4) { width: 10%; }
 .tableWrap th:nth-child(5) { width: 8%; }
 .tableWrap th:nth-child(6) { width: 8%; }
 .tableWrap th:nth-child(7) { width: 8%; }
-.tableWrap th:nth-child(8) { width: 13%; }
+.tableWrap th:nth-child(8) { width: 8%; }
 .tableWrap th:nth-child(9) { width: 8%; }
 .tableWrap th:nth-child(10) { width: 10%; }
 
@@ -351,6 +351,35 @@
   padding: 2px 6px;
   border-radius: 3px;
   color: #405567;
+  word-break: break-all;
+  max-width: 350px;
+}
+
+.idCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.copyButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  opacity: 0.6;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.copyButton:hover:not(:disabled) {
+  opacity: 1;
+  background: #e8eef4;
+}
+
+.copyButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 .person {

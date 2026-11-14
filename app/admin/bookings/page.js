@@ -431,7 +431,19 @@ export default function BookingsPage() {
               {!isLoading && !error && bookings.map((booking) => (
                 <tr key={booking._id}>
                   <td>
-                    <code className={styles.bookingId}>{booking._id?.slice(-8).toUpperCase()}</code>
+                    <div className={styles.idCell}>
+                      <code className={styles.bookingId}>{booking._id}</code>
+                      <button
+                        type="button"
+                        className={styles.copyButton}
+                        onClick={() => navigator.clipboard.writeText(booking._id || "")}
+                        aria-label="Copy booking ID"
+                        title="Copy ID"
+                        disabled={!booking._id}
+                      >
+                        📋
+                      </button>
+                    </div>
                   </td>
                   <td>
                     <div className={styles.person}>

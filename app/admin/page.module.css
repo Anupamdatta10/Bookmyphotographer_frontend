@@ -619,6 +619,43 @@
     font-size: 9px;
 }
 
+.bookingId {
+  font-size: 10px;
+  background: #f0f4f8;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #405567;
+  word-break: break-all;
+  max-width: 200px;
+}
+
+.idCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.copyButton {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  opacity: 0.6;
+  transition: opacity 0.2s, background 0.2s;
+}
+
+.copyButton:hover:not(:disabled) {
+  opacity: 1;
+  background: #e8eef4;
+}
+
+.copyButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
 .pending {
     background: #fff1d9;
     color: #c58421;

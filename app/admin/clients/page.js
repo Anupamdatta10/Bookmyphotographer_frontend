@@ -231,6 +231,7 @@ export default function ClientsPage() {
           <table className={styles.table}>
             <thead>
               <tr>
+                <th scope="col">Client ID</th>
                 <th scope="col">Client</th>
                 <th scope="col">Email</th>
                 <th scope="col">Phone</th>
@@ -243,14 +244,14 @@ export default function ClientsPage() {
             <tbody>
               {isLoading && (
                 <tr>
-                  <td className={styles.empty} colSpan={7}>
+                  <td className={styles.empty} colSpan={8}>
                     Loading client accounts...
                   </td>
                 </tr>
               )}
               {actionError && (
                 <tr>
-                  <td className={styles.error} colSpan={7} role="alert">
+                  <td className={styles.error} colSpan={8} role="alert">
                     {actionError}
                   </td>
                 </tr>
@@ -259,6 +260,20 @@ export default function ClientsPage() {
                 !loadError &&
                 clients.map((client) => (
                   <tr key={client.id}>
+                    <td>
+                      <div className={styles.idCell}>
+                        <code className={styles.bookingId}>{client.id}</code>
+                        <button
+                          type="button"
+                          className={styles.copyButton}
+                          onClick={() => navigator.clipboard.writeText(client.id)}
+                          aria-label="Copy client ID"
+                          title="Copy ID"
+                        >
+                          📋
+                        </button>
+                      </div>
+                    </td>
                     <td>
                       <Link
                         className={styles.clientLink}
@@ -296,7 +311,7 @@ export default function ClientsPage() {
                 ))}
               {!isLoading && !loadError && clients.length === 0 && (
                 <tr>
-                  <td className={styles.empty} colSpan={7}>
+                  <td className={styles.empty} colSpan={8}>
                     {searchTerm.trim()
                       ? "No clients match your search."
                       : "No client accounts found."}

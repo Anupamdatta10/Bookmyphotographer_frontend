@@ -384,6 +384,7 @@ export default function AdminPage() {
               <table>
                 <thead>
                   <tr>
+                    <th>Photographer ID</th>
                     <th>Photographer</th>
                     <th>Location</th>
                     <th>Joined on</th>
@@ -417,6 +418,20 @@ export default function AdminPage() {
                     !photographersError &&
                     filteredPhotographers.map((photographer) => (
                     <tr key={photographer.id}>
+                      <td>
+                        <div className={styles.idCell}>
+                          <code className={styles.bookingId}>{photographer.id}</code>
+                          <button
+                            type="button"
+                            className={styles.copyButton}
+                            onClick={() => navigator.clipboard.writeText(photographer.id)}
+                            aria-label="Copy photographer ID"
+                            title="Copy ID"
+                          >
+                            📋
+                          </button>
+                        </div>
+                      </td>
                       <td>
                         <button
                           type="button"
@@ -526,7 +541,7 @@ export default function AdminPage() {
                     !photographersError &&
                     filteredPhotographers.length === 0 && (
                     <tr>
-                      <td className={styles.empty} colSpan="5">
+                      <td className={styles.empty} colSpan="6">
                         No photographers match this list.
                       </td>
                     </tr>
