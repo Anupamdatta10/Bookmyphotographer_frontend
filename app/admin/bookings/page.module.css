@@ -275,13 +275,13 @@
 }
 
 .tableWrap th:nth-child(1) { width: 19%; }
-.tableWrap th:nth-child(2) { width: 13%; }
+.tableWrap th:nth-child(2) { width: 18%; }
 .tableWrap th:nth-child(3) { width: 14%; }
-.tableWrap th:nth-child(4) { width: 10%; }
+.tableWrap th:nth-child(4) { width: 7%; }
 .tableWrap th:nth-child(5) { width: 8%; }
-.tableWrap th:nth-child(6) { width: 8%; }
+.tableWrap th:nth-child(6) { width: 6%; }
 .tableWrap th:nth-child(7) { width: 8%; }
-.tableWrap th:nth-child(8) { width: 8%; }
+.tableWrap th:nth-child(8) { width: 6%; }
 .tableWrap th:nth-child(9) { width: 8%; }
 .tableWrap th:nth-child(10) { width: 10%; }
 
@@ -421,9 +421,10 @@
 .person small {
   color: #9aa8b2;
   font-size: 9px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  max-width: none;
 }
 
 .clientDetails {
@@ -448,6 +449,10 @@
   color: #9aa8b2;
   font-size: 9px;
   font-weight: 700;
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
+  max-width: none;
 }
 
 .eventDateItem {

@@ -51,9 +51,9 @@ export default function Footer() {
           <span aria-hidden="true">🌐</span>
           <span>bookmyfotographer.co.in</span>
         </a>
-        <a className={styles.contactItem} href="mailto:bookmyfotographer@gmail.com">
+        <a className={styles.contactItem} href="mailto:email@bookmyfotographer.co.in">
           <span aria-hidden="true">✉</span>
-          <span>bookmyfotographer@gmail.com</span>
+          <span>email@bookmyfotographer.co.in</span>
         </a>
         <a className={styles.contactItem} href="tel:+919804060342">
           <span aria-hidden="true">☎</span>

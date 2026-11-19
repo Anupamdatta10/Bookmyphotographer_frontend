@@ -90,16 +90,6 @@ export default function Navbar({ current = "home", hideAuthActions = false, full
         />
 
       </Link>
-      <button
-        className={styles.menuToggle}
-        type="button"
-        aria-expanded={menuOpen}
-        aria-controls="site-navigation"
-        aria-label="Toggle navigation menu"
-        onClick={() => setMenuOpen((isOpen) => !isOpen)}
-      >
-        ☰
-      </button>
       <nav
         id="site-navigation"
         className={menuOpen ? styles.mobileMenuOpen : ""}
@@ -175,6 +165,16 @@ export default function Navbar({ current = "home", hideAuthActions = false, full
             {current !== "signin" && <Link href="/signin">Sign In</Link>}
           </div>
         ))}
+      <button
+        className={styles.menuToggle}
+        type="button"
+        aria-expanded={menuOpen}
+        aria-controls="site-navigation"
+        aria-label="Toggle navigation menu"
+        onClick={() => setMenuOpen((isOpen) => !isOpen)}
+      >
+        ☰
+      </button>
     </header>
   );
 }

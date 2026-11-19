@@ -30,6 +30,7 @@ function mapPhotographer(user) {
     id: String(user._id),
     name,
     email: user.email || "",
+    phone: user.phone || "",
     location:
       [user.city, user.state, user.country].filter(Boolean).join(", ") ||
       "Location not provided",
@@ -340,7 +341,7 @@ export default function AdminPage() {
           <section className={styles.panel}>
             <div className={styles.panelHeader}>
               <div>
-                <h2>Applications</h2>
+                <h2>PHOTOGRAPHERS</h2>
                 <p>Keep your photographer directory accurate and trusted.</p>
               </div>
               <label className={styles.search}>
@@ -456,6 +457,7 @@ export default function AdminPage() {
                           <div>
                             <b>{photographer.name}</b>
                             <small>{photographer.email}</small>
+                            <small>{photographer.phone || "N/A"}</small>
                           </div>
                         </div>
                         </button>

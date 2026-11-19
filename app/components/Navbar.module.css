@@ -212,6 +212,9 @@
     height: 57px;
     gap: 8px;
     padding: 0 15px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
   }
   .logo {
     min-width: auto;
@@ -260,7 +263,7 @@
     height: 30px;
     align-items: center;
     justify-content: center;
-    margin-left: auto;
+    margin-left: 0;
     padding: 0;
     border: 1px solid #778894;
     border-radius: 4px;
@@ -269,13 +272,16 @@
     font-size: 18px;
     line-height: 1;
     cursor: pointer;
+    order: 3;
   }
   .actions {
     gap: 5px;
-    margin-left: 0;
+    margin-left: auto;
+    order: 1;
   }
   .userProfile {
-    margin-left: 0;
+    margin-left: auto;
+    order: 2;
   }
   .profileTrigger {
     min-height: 36px;

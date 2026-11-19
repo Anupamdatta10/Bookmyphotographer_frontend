@@ -470,6 +470,7 @@ export default function BookingsPage() {
                       <div>
                                     <b>{booking.photographerId?.name || "Unknown"}</b>
                                     <small>{booking.photographerId?.email || ""}</small>
+                                    <small>{booking.photographerId?.phone || "N/A"}</small>
                       </div>
                     </div>
                   </td>

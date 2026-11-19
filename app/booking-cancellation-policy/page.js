@@ -298,7 +298,7 @@ export default function BookingCancellationPolicyPage() {
             Website: <strong>bookmyfotographer.co.in</strong>
           </p>
           <p>
-            Email: <strong>bookmyfotographer@gmail.com</strong>
+            Email: <strong>email@bookmyfotographer.co.in</strong>
           </p>
           <p>Phone: <strong>+91 9804060342</strong></p>
           <p>

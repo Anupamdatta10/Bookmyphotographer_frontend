@@ -322,7 +322,7 @@ export default function PrivacyPolicyPage() {
           <p>
             Website: <strong>bookmyfotographer.co.in</strong>
           </p>
-          <p>Email: <strong>bookmyfotographer@gmail.com</strong></p>
+          <p>Email: <strong>email@bookmyfotographer.co.in</strong></p>
           <p>Phone: <strong>+91 9804060342</strong></p>
           <p>
             Grievance contact: Anit Dey, +91 8334934147

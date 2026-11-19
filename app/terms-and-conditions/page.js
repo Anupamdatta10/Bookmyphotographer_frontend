@@ -221,7 +221,7 @@ export default function TermsAndConditionsPage() {
             Users should promptly report serious or undesirable incidents,
             including alleged misconduct, harassment, threats, fraud, safety
             concerns, or material breaches of an engagement. Contact us at
-            bookmyfotographer@gmail.com or +91 9804060342, providing relevant
+            email@bookmyfotographer.co.in or +91 9804060342, providing relevant
             details and supporting information where safe and appropriate.
           </p>
           <p>
@@ -418,7 +418,7 @@ export default function TermsAndConditionsPage() {
           </p>
           <p><strong>BookMyFotographer | West Bengal, India</strong></p>
           <p>Website: <a href="https://bookmyfotographer.co.in" target="_blank" rel="noreferrer">bookmyfotographer.co.in</a></p>
-          <p>Email: <a href="mailto:bookmyfotographer@gmail.com">bookmyfotographer@gmail.com</a></p>
+          <p>Email: <a href="mailto:email@bookmyfotographer.co.in">email@bookmyfotographer.co.in</a></p>
           <p>Phone: <a href="tel:+919804060342">+91 9804060342</a></p>
           <p>Grievance contact: Anit Dey, <a href="tel:+918334934147">+91 8334934147</a></p>
           <p><strong>BookMyFotographer — Connecting Customers. Empowering Creators.</strong></p>
