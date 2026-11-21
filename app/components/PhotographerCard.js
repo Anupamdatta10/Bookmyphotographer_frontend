@@ -3,6 +3,15 @@ import Link from "next/link";
 import styles from "../page.module.css";
 
 export default function PhotographerCard({ person }) {
+  const professionValue = Array.isArray(person.proffession)
+    ? person.proffession.filter(Boolean).join(" and ")
+    : person.proffession;
+  const profession =
+    typeof professionValue === "string" ? professionValue.trim() : "";
+  const professionLabel = profession
+    ? `${profession[0].toUpperCase()}${profession.slice(1)}`
+    : "";
+
   return (
     <article className={styles.card}>
       <Link
@@ -24,8 +33,14 @@ export default function PhotographerCard({ person }) {
         />
         </div>
         <div className={styles.cardInfo}>
-          <h3>{person.name}</h3>
+          <h3>
+            {person.name}
+            <span className={styles.verifiedBadge}>✓ Verified</span>
+          </h3>
           <p className={styles.location}>● &nbsp;{person.location}</p>
+          {professionLabel && (
+            <p className={styles.profession}>Profession: {professionLabel}</p>
+          )}
           {person.minimumDailyFees !== null &&
             person.minimumDailyFees !== undefined &&
             person.minimumDailyFees !== "" && (

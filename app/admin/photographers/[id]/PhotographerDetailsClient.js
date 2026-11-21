@@ -273,7 +273,7 @@ export default function PhotographerDetailsPage() {
         </aside>
       </div>
 
-      <section className={styles.card}>
+      {/* <section className={styles.card}>
         <h2>Portfolio photos</h2>
         {gallery.length ? (
           <div className={styles.mediaGrid}>
@@ -291,16 +291,22 @@ export default function PhotographerDetailsPage() {
         ) : (
           <p className={styles.emptyMedia}>Not available</p>
         )}
-      </section>
+      </section> */}
 
       <section className={styles.card}>
-        <h2>Profile videos</h2>
+        <h2>Portfolio photos</h2>
         {videos.length ? (
           <div className={styles.mediaGrid}>
             {videos.map((video) => (
               <figure key={video._id || video.slot} className={styles.mediaCard}>
                 {video.videoUrl ? (
-                  <video src={mediaUrl(video.videoUrl)} controls className={styles.video} />
+                  <Image
+                    src={mediaUrl(video.videoUrl)}
+                    alt={video.originalName || "Profile photo"}
+                    width={640}
+                    height={480}
+                    unoptimized
+                  />
                 ) : (
                   <div className={styles.emptyMedia}>Not available</div>
                 )}

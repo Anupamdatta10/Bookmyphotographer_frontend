@@ -1,13 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ReactTags } from "react-tag-autocomplete";
 import Swal from "sweetalert2";
 import Navbar from "../components/Navbar";
-import InfiniteScrollTrigger from "../components/InfiniteScrollTrigger";
 import {
   WEST_BENGAL_DISTRICTS,
   WEST_BENGAL_CITIES_BY_DISTRICT,
@@ -16,9 +15,6 @@ import styles from "./page.module.css";
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const savedUserKey = "photoConnectUser";
-const maxSamplePhotos = 5;
-const GALLERY_PAGE_SIZE = 10;
-const maxSamplePhotoSize = 5 * 1024 * 1024;
 const maxProfilePhotoSize = 20 * 1024 * 1024;
 const maxProfileVideos = 5;
 const allowedProfilePhotoTypes = [
@@ -52,7 +48,7 @@ const editableSections = [
   {
     title: "Photographer profile",
     fields: [
-      ["proffession", "Profession", "text"],
+      ["proffession", "Profession", "select"],
       ["specialties", "Specialties", "text"],
       ["languages", "Languages", "text"],
       ["experienceYears", "Experience (years)", "number"],
@@ -235,6 +231,10 @@ function getEditValue(profile, field) {
     const values = profile[field];
     return Array.isArray(values) ? values.join(", ") : (values ?? "");
   }
+  if (field === "proffession") {
+    const values = profile.proffession;
+    return Array.isArray(values) ? values.join(", ") : (values ?? "");
+  }
   if (field === "dob")
     return profile.dob ? String(profile.dob).slice(0, 10) : "";
   return profile[field] ?? "";
@@ -263,6 +263,10 @@ function getGalleryImageUrl(path) {
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
   return `${process.env.NEXT_PUBLIC_BACKEND_URL}${path}`;
+}
+
+function isImageUrl(path) {
+  return /\.(jpe?g|png|gif|webp)(?:[?#].*)?$/i.test(path || "");
 }
 
 function getProfileVideos(profile, videoRecords = []) {
@@ -336,28 +340,12 @@ export default function ProfilePage() {
   const [availabilityMessage, setAvailabilityMessage] = useState("");
   const [availabilityMessageIsError, setAvailabilityMessageIsError] =
     useState(false);
-  const [galleryPhotos, setGalleryPhotos] = useState([]);
-  const [galleryPage, setGalleryPage] = useState(1);
-  const [galleryHasMore, setGalleryHasMore] = useState(false);
-  const [galleryLoadingMore, setGalleryLoadingMore] = useState(false);
-  const [galleryMoreError, setGalleryMoreError] = useState("");
-  const galleryLoadingRef = useRef(false);
   const [profileVideos, setProfileVideos] = useState([]);
-  const [galleryLoading, setGalleryLoading] = useState(true);
-  const [sampleFiles, setSampleFiles] = useState(() =>
-    Array(maxSamplePhotos).fill(null),
-  );
-  const [deletedSamplePhotoIds, setDeletedSamplePhotoIds] = useState([]);
   const [deletedVideoSlots, setDeletedVideoSlots] = useState([]);
-  const [samplePreviewUrls, setSamplePreviewUrls] = useState(() =>
-    Array(maxSamplePhotos).fill(""),
-  );
-  const samplePreviewUrlsRef = useRef(Array(maxSamplePhotos).fill(""));
-  const sampleFileInputRefs = useRef([]);
-  const [galleryLoadFailed, setGalleryLoadFailed] = useState(false);
   const [fieldErrors, setFieldErrors] = useState({});
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [selectedProfession, setSelectedProfession] = useState("");
   const [uploadErrors, setUploadErrors] = useState({});
 
   const mandatoryFields = new Set([
@@ -462,77 +450,6 @@ export default function ProfilePage() {
     if (!photographerId || !isPhotographer) return;
     let isCurrent = true;
     fetch(
-      `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/photo-galleries/user/${encodeURIComponent(photographerId)}?page=1&limit=${GALLERY_PAGE_SIZE}&sortBy=sequence&sortOrder=asc`,
-    )
-      .then(async (response) => {
-        const result = await response.json().catch(() => null);
-        if (!response.ok) {
-          throw new Error(result?.message || "Could not load sample photos.");
-        }
-        return result;
-      })
-      .then((result) => {
-        if (!isCurrent) return;
-        const photos = Array.isArray(result?.data) ? result.data : [];
-        setGalleryPage(1);
-        setGalleryHasMore(Number(result?.total) > photos.length);
-        setGalleryPhotos(
-          photos
-            .filter((photo) => !photo.isProfileImage && photo.link)
-            .sort((first, second) => first.sequence - second.sequence),
-        );
-      })
-      .catch((error) => {
-        if (isCurrent) {
-          setGalleryLoadFailed(true);
-          setSaveMessage(error.message || "Could not load sample photos.");
-          setSaveMessageIsError(true);
-        }
-      })
-      .finally(() => {
-        if (isCurrent) setGalleryLoading(false);
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [photographerId, isPhotographer]);
-
-  const loadMoreGalleryPhotos = useCallback(async () => {
-    if (!galleryHasMore || galleryLoadingRef.current || !photographerId) return;
-    galleryLoadingRef.current = true;
-    setGalleryLoadingMore(true);
-    setGalleryMoreError("");
-    try {
-      const nextPage = galleryPage + 1;
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/photo-galleries/user/${encodeURIComponent(photographerId)}?page=${nextPage}&limit=${GALLERY_PAGE_SIZE}&sortBy=sequence&sortOrder=asc`,
-      );
-      const result = await response.json().catch(() => null);
-      if (!response.ok) {
-        throw new Error(result?.message || "Could not load more portfolio photos.");
-      }
-      const photos = Array.isArray(result?.data) ? result.data : [];
-      setGalleryPhotos((current) => [
-        ...current,
-        ...photos
-          .filter((photo) => !photo.isProfileImage && photo.link)
-          .sort((first, second) => first.sequence - second.sequence),
-      ]);
-      setGalleryPage(nextPage);
-      setGalleryHasMore(nextPage * GALLERY_PAGE_SIZE < Number(result?.total ?? nextPage * GALLERY_PAGE_SIZE + photos.length));
-    } catch (error) {
-      setGalleryMoreError(error.message || "Could not load more portfolio photos.");
-    } finally {
-      galleryLoadingRef.current = false;
-      setGalleryLoadingMore(false);
-    }
-  }, [galleryHasMore, galleryPage, photographerId]);
-
-  useEffect(() => {
-    if (!photographerId || !isPhotographer) return;
-    let isCurrent = true;
-    fetch(
       `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/${encodeURIComponent(photographerId)}/profile-videos`,
     )
       .then(async (response) => {
@@ -588,9 +505,6 @@ export default function ProfilePage() {
         URL.revokeObjectURL(identityProofPreviewUrlRef.current);
       }
       videoPreviewUrlsRef.current.forEach((previewUrl) => {
-        if (previewUrl) URL.revokeObjectURL(previewUrl);
-      });
-      samplePreviewUrlsRef.current.forEach((previewUrl) => {
         if (previewUrl) URL.revokeObjectURL(previewUrl);
       });
     },
@@ -708,32 +622,6 @@ export default function ProfilePage() {
     setSelectedVideoPreviews(nextPreviewUrls);
   }
 
-  function updateSampleFile(index, file) {
-    const nextPreviewUrls = [...samplePreviewUrlsRef.current];
-    const previousUrl = nextPreviewUrls[index];
-    if (previousUrl) URL.revokeObjectURL(previousUrl);
-    nextPreviewUrls[index] = file ? URL.createObjectURL(file) : "";
-    samplePreviewUrlsRef.current = nextPreviewUrls;
-    setSamplePreviewUrls(nextPreviewUrls);
-    setSampleFiles((files) =>
-      files.map((currentFile, fileIndex) =>
-        fileIndex === index ? file : currentFile,
-      ),
-    );
-  }
-
-  function clearSampleFiles() {
-    samplePreviewUrlsRef.current.forEach((previewUrl) => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    });
-    samplePreviewUrlsRef.current = Array(maxSamplePhotos).fill("");
-    sampleFileInputRefs.current.forEach((input) => {
-      if (input) input.value = "";
-    });
-    setSamplePreviewUrls(Array(maxSamplePhotos).fill(""));
-    setSampleFiles(Array(maxSamplePhotos).fill(null));
-  }
-
   function getFieldError(field, fieldValue) {
     const value = Array.isArray(fieldValue)
       ? fieldValue
@@ -793,15 +681,16 @@ export default function ProfilePage() {
     updateSelectedImage(null);
     updateSelectedIdentityProof(null);
     setClearProfileImage(false);
+    setSelectedDistrict("");
+    setSelectedCity("");
+    setSelectedProfession("");
     selectedVideoFiles.forEach((_, index) => updateSelectedVideo(index, null));
-    setDeletedSamplePhotoIds([]);
     setDeletedVideoSlots([]);
     if (imageInputRef.current) imageInputRef.current.value = "";
     if (identityProofInputRef.current) identityProofInputRef.current.value = "";
     videoInputRefs.current.forEach((input) => {
       if (input) input.value = "";
     });
-    clearSampleFiles();
     setIsCalendarOpen(false);
     setSaveMessage("");
     setIsEditing(false);
@@ -816,8 +705,6 @@ export default function ProfilePage() {
     const videoFiles = selectedVideoFiles;
     const videoSlotsToDelete = deletedVideoSlots;
     const shouldClearProfileImage = clearProfileImage;
-    const hasSampleChanges =
-      sampleFiles.some(Boolean) || deletedSamplePhotoIds.length > 0;
     const nextUploadErrors = {};
     const hasProfileImage =
       Boolean(selectedImageFile) ||
@@ -870,25 +757,6 @@ export default function ProfilePage() {
         return;
       }
     }
-    if (
-      sampleFiles.some(
-        (file) =>
-          file &&
-          (!file.type.startsWith("image/") || file.size > maxSamplePhotoSize),
-      )
-    ) {
-      setSaveMessage("Choose portfolio images no larger than 5 MB each.");
-      setSaveMessageIsError(true);
-      return;
-    }
-    if (hasSampleChanges && galleryLoadFailed) {
-      setSaveMessage(
-        "Could not load your saved photos. Reload this page before editing them.",
-      );
-      setSaveMessageIsError(true);
-      return;
-    }
-
     const value = (field) => String(formData.get(field) ?? "").trim();
     const pincode = value("pincode");
     const experienceYears = value("experienceYears");
@@ -926,6 +794,8 @@ export default function ProfilePage() {
         fieldValue = selectedDistrict;
       } else if (field === "city") {
         fieldValue = selectedCity;
+      } else if (field === "proffession") {
+        fieldValue = selectedProfession;
       } else if (field === "dob") {
         fieldValue = dobValue;
       } else {
@@ -961,7 +831,10 @@ export default function ProfilePage() {
       address1: value("address1"),
       address2: value("address2"),
       pincode: pincode ? Number(pincode) : null,
-      proffession: value("proffession"),
+      proffession:
+        selectedProfession === "both"
+          ? "photographer and videographer"
+          : selectedProfession,
       specialties: specialtyTags
         .map((tag) => tag.label.trim())
         .filter(Boolean),
@@ -1019,8 +892,7 @@ export default function ProfilePage() {
       !shouldClearProfileImage &&
       !identityProofFile &&
       videoFiles.every((file) => !file) &&
-      videoSlotsToDelete.length === 0 &&
-      !hasSampleChanges
+      videoSlotsToDelete.length === 0
     ) {
       setSaveMessage("There are no changes to save.");
       setSaveMessageIsError(false);
@@ -1188,67 +1060,6 @@ export default function ProfilePage() {
         savedProfileParts.push(`Profile photo ${slot + 1}`);
       }
 
-      if (hasSampleChanges) {
-        const updatedPhotos = [...galleryPhotos];
-        let deletedPhotoCount = 0;
-        let savedPhotoCount = 0;
-        for (const photoId of deletedSamplePhotoIds) {
-          const response = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/photo-galleries/${encodeURIComponent(photoId)}`,
-            {
-              method: "DELETE",
-              headers: {
-                ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-              },
-            },
-          );
-          const result = await response.json().catch(() => null);
-          if (!response.ok) {
-            throw new Error(result?.message || "Could not clear a saved portfolio photo.");
-          }
-          const photoIndex = updatedPhotos.findIndex((photo) => photo._id === photoId);
-          if (photoIndex !== -1) updatedPhotos.splice(photoIndex, 1);
-          setGalleryPhotos([...updatedPhotos]);
-          setDeletedSamplePhotoIds((ids) => ids.filter((id) => id !== photoId));
-          deletedPhotoCount += 1;
-        }
-        if (deletedPhotoCount > 0) savedProfileParts.push("Portfolio photos");
-
-        for (let index = 0; index < sampleFiles.length; index += 1) {
-          const file = sampleFiles[index];
-          if (!file) continue;
-
-          const body = new FormData();
-          body.append("file", file);
-          body.append("userId", String(profile._id));
-          body.append("sequence", String(index + 1));
-          body.append("description", `Sample photo ${index + 1}`);
-          const existingPhoto = updatedPhotos[index];
-          const endpoint = existingPhoto
-            ? `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/photo-galleries/${encodeURIComponent(existingPhoto._id)}`
-            : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/photo-galleries`;
-          const photoResponse = await fetch(endpoint, {
-            method: existingPhoto ? "PATCH" : "POST",
-            headers: {
-              ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-            },
-            body,
-          });
-          const photoResult = await photoResponse.json().catch(() => null);
-          if (!photoResponse.ok) {
-            throw new Error(
-              photoResult?.message || `Could not save sample photo ${index + 1}.`,
-            );
-          }
-          updatedPhotos[index] = photoResult?.data ?? photoResult;
-          setGalleryPhotos([...updatedPhotos]);
-          savedPhotoCount += 1;
-          if (savedPhotoCount === 1) savedProfileParts.push("Portfolio photos");
-        }
-        clearSampleFiles();
-        setDeletedSamplePhotoIds([]);
-      }
-
       setDeletedVideoSlots([]);
       setIsEditing(false);
       updateSelectedImage(null);
@@ -1390,6 +1201,18 @@ export default function ProfilePage() {
                     );
                     setSelectedDistrict(districtValue);
                     setSelectedCity(cityOption?.value ?? normalizeLocationValue(profile.city));
+                    const currentProfession = profile.proffession;
+                    const professionValue = Array.isArray(currentProfession)
+                      ? currentProfession.includes("photographer") &&
+                        currentProfession.includes("videographer")
+                        ? "both"
+                        : currentProfession[0] ?? ""
+                      : currentProfession === "photographer and videographer"
+                        ? "both"
+                        : currentProfession ?? "";
+                    setSelectedProfession(
+                      professionValue,
+                    );
                     const currentSpecialties = Array.isArray(profile.specialties)
                       ? profile.specialties
                       : profile.specialties
@@ -1833,6 +1656,32 @@ export default function ProfilePage() {
                               </small>
                             )}
                           </>
+                        ) : field === "proffession" ? (
+                          <>
+                            <select
+                              id={field}
+                              name={field}
+                              value={selectedProfession}
+                              onChange={(event) => {
+                                const professionValue = event.target.value;
+                                setSelectedProfession(professionValue);
+                                validateAndSetFieldError(field, professionValue);
+                              }}
+                              aria-invalid={Boolean(fieldErrors[field])}
+                            >
+                              <option value="">Select profession</option>
+                              <option value="photographer">Photographer</option>
+                              <option value="videographer">Videographer</option>
+                              <option value="both">
+                                Both photographer and videographer
+                              </option>
+                            </select>
+                            {fieldErrors.proffession && (
+                              <small className={styles.editError} role="alert">
+                                {fieldErrors.proffession}
+                              </small>
+                            )}
+                          </>
                         ) : (
                           <>
                             <input
@@ -2091,8 +1940,12 @@ export default function ProfilePage() {
                         const isMarkedForRemoval =
                           deletedVideoSlots.includes(index);
                         const previewUrl = selectedVideoPreviews[index];
-                        const isExistingPhoto =
-                          /\.(jpe?g|png|gif|webp)$/i.test(videoUrl || "");
+                        const isExistingPhoto = Boolean(
+                          profileVideos.find(
+                            (video) =>
+                              video.slot === index && video.videoUrl === videoUrl,
+                          ),
+                        ) || isImageUrl(videoUrl);
                         return (
                           <article className={styles.videoUpload} key={index}>
                             <div className={styles.videoPreviewFrame}>
@@ -2245,10 +2098,7 @@ export default function ProfilePage() {
                 <button
                   className={styles.saveButton}
                   type="submit"
-                  disabled={
-                    isSaving ||
-                    (isPhotographer && galleryLoading && sampleFiles.some(Boolean))
-                  }
+                  disabled={isSaving}
                 >
                   {isSaving ? "Saving profile..." : "Save profile"}
                 </button>
@@ -2503,31 +2353,30 @@ export default function ProfilePage() {
                     <h2>Portfolio media</h2>
                     <p>Photos and video links shared on your profile</p>
                   </header>
-                  {galleryPhotos.length > 0 ||
-                  getProfileVideos(profile, profileVideos).some((url) =>
-                    /\.(jpe?g|png|gif|webp)$/i.test(url || ""),
+                  {getProfileVideos(profile, profileVideos).some(
+                    (url, index) =>
+                      Boolean(url) &&
+                      (profileVideos.some(
+                        (video) =>
+                          video.slot === index && video.videoUrl === url,
+                      ) ||
+                        isImageUrl(url)),
                   ) ||
                   getProfileVideoLinks(profile).some(Boolean) ? (
                     <div className={styles.savedMediaWaterfall}>
-                      {galleryPhotos.map((photo, index) => (
-                        <figure
-                          className={styles.savedMediaItem}
-                          key={photo._id || `${photo.link}-${index}`}
-                        >
-                          <Image
-                            className={styles.savedPortfolioPhoto}
-                            src={getGalleryImageUrl(photo.link)}
-                            alt={`Portfolio photo ${index + 1}`}
-                            width={640}
-                            height={440}
-                            unoptimized
-                          />
-                        </figure>
-                      ))}
                       {getProfileVideos(profile, profileVideos)
-                        .filter(Boolean)
-                        .filter((url) => /\.(jpe?g|png|gif|webp)$/i.test(url))
-                        .map((videoUrl, index) => (
+                        .map((videoUrl, index) => ({ videoUrl, index }))
+                        .filter(({ videoUrl }) => Boolean(videoUrl))
+                        .filter(
+                          ({ videoUrl, index }) =>
+                            profileVideos.some(
+                              (video) =>
+                                video.slot === index &&
+                                video.videoUrl === videoUrl,
+                            ) ||
+                            isImageUrl(videoUrl),
+                        )
+                        .map(({ videoUrl, index }) => (
                           <figure
                             className={styles.savedMediaItem}
                             key={`${videoUrl}-${index}`}
@@ -2565,17 +2414,9 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <p className={styles.portfolioMediaEmpty}>
-                      No portfolio media uploaded yet.
+                      No profile photos or video links added yet.
                     </p>
                   )}
-                  <InfiniteScrollTrigger
-                    hasMore={galleryHasMore}
-                    isLoading={galleryLoadingMore}
-                    onLoadMore={loadMoreGalleryPhotos}
-                    error={galleryMoreError}
-                    onRetry={loadMoreGalleryPhotos}
-                    loadingLabel="Loading more portfolio photos..."
-                  />
                 </section>
               )}
             </>

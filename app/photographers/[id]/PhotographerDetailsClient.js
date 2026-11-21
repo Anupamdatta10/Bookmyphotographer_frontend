@@ -348,9 +348,9 @@ export default function PhotographerDetailsClient() {
       key: photo._id || `${photo.link}-${index}`,
     })),
     ...profileVideoUrls.map((videoUrl, index) => ({
-      type: "video",
+      type: "photo",
       src: getImageUrl(videoUrl),
-      label: `Profile video ${index + 1}`,
+      label: `Profile photo ${index + 1}`,
       key: `${videoUrl}-${index}`,
     })),
     ...profileVideoLinks.map((videoLink, index) => ({
