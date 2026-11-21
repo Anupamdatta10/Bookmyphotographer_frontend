@@ -31,9 +31,20 @@ export default function ContactPage() {
     }
 
     const formData = new FormData(event.currentTarget);
+    const phone = String(formData.get("phone") ?? "")
+      .replace(/\D/g, "")
+      .trim();
+
+    if (!/^\d{10}$/.test(phone)) {
+      setError("Please enter a valid 10-digit phone number.");
+      setSending(false);
+      return;
+    }
+
     const submission = {
       name: formData.get("name"),
       email: formData.get("email"),
+      phone,
       subject: formData.get("subject"),
       message: formData.get("message"),
     };
@@ -103,6 +114,19 @@ export default function ContactPage() {
                 type="email"
                 maxLength={254}
                 placeholder="Enter your email"
+              />
+            </label>
+            <label>
+              Phone
+              <input
+                required
+                name="phone"
+                type="tel"
+                inputMode="numeric"
+                autoComplete="tel"
+                pattern="[0-9]{10}"
+                maxLength={10}
+                placeholder="Enter your 10-digit phone number"
               />
             </label>
             <label>
