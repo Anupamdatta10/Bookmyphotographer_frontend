@@ -34,6 +34,7 @@ export default function ContactPage() {
     const submission = {
       name: formData.get("name"),
       email: formData.get("email"),
+      phone: formData.get("phone"),
       subject: formData.get("subject"),
       message: formData.get("message"),
     };
@@ -103,6 +104,16 @@ export default function ContactPage() {
                 type="email"
                 maxLength={254}
                 placeholder="Enter your email"
+              />
+            </label>
+            <label>
+              Phone Number
+              <input
+                required
+                name="phone"
+                type="tel"
+                maxLength={20}
+                placeholder="Enter your phone number"
               />
             </label>
             <label>
