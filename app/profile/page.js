@@ -19,22 +19,13 @@ const savedUserKey = "photoConnectUser";
 const maxSamplePhotos = 5;
 const GALLERY_PAGE_SIZE = 10;
 const maxSamplePhotoSize = 5 * 1024 * 1024;
-const maxProfileVideoSize = 20 * 1024 * 1024;
+const maxProfilePhotoSize = 20 * 1024 * 1024;
 const maxProfileVideos = 5;
-const allowedProfileVideoTypes = [
-  "video/mp4",
-  "video/webm",
-  "video/quicktime",
-  "video/x-msvideo",
-  "video/ogg",
-  "video/x-matroska",
-];
-const allowedProfileMediaTypes = [
+const allowedProfilePhotoTypes = [
   "image/jpeg",
   "image/png",
   "image/gif",
   "image/webp",
-  ...allowedProfileVideoTypes,
 ];
 
 const editableSections = [
@@ -284,6 +275,17 @@ function getProfileVideos(profile, videoRecords = []) {
     const record = videoRecords.find((video) => video.slot === slot);
     return record?.videoUrl || legacyUrls[slot] || "";
   });
+}
+
+function getProfileVideoLinks(profile) {
+  const links = Array.isArray(profile?.profileVideoLinks)
+    ? profile.profileVideoLinks
+    : Array.isArray(profile?.videoLinks)
+      ? profile.videoLinks
+      : [];
+  return Array.from({ length: 3 }, (_, index) =>
+    typeof links[index] === "string" ? links[index] : "",
+  );
 }
 
 export default function ProfilePage() {
@@ -675,8 +677,19 @@ export default function ProfilePage() {
     nextErrors[index] = "";
     setVideoErrors(nextErrors);
 
-    if (file && file.size > maxProfileVideoSize) {
-      nextErrors[index] = "Each photo or video must be 20 MB or smaller.";
+    if (file && !allowedProfilePhotoTypes.includes(file.type)) {
+      nextErrors[index] = "Choose a JPG, PNG, GIF, or WebP photo.";
+      setVideoErrors(nextErrors);
+      setSelectedVideoFiles((files) =>
+        files.map((currentFile, fileIndex) =>
+          fileIndex === index ? null : currentFile,
+        ),
+      );
+      setSelectedVideoPreviews(nextPreviewUrls);
+      return;
+    }
+    if (file && file.size > maxProfilePhotoSize) {
+      nextErrors[index] = "Each photo must be 20 MB or smaller.";
       setVideoErrors(nextErrors);
       setSelectedVideoFiles((files) =>
         files.map((currentFile, fileIndex) =>
@@ -846,13 +859,13 @@ export default function ProfilePage() {
       return;
     }
     for (const videoFile of videoFiles) {
-      if (videoFile && !allowedProfileMediaTypes.includes(videoFile.type)) {
-        setSaveMessage("Choose a JPG, PNG, GIF, WebP, MP4, WebM, MOV, AVI, OGG, or MKV file.");
+      if (videoFile && !allowedProfilePhotoTypes.includes(videoFile.type)) {
+        setSaveMessage("Choose a JPG, PNG, GIF, or WebP photo.");
         setSaveMessageIsError(true);
         return;
       }
-      if (videoFile?.size > maxProfileVideoSize) {
-        setSaveMessage("Each photo or video must be 20 MB or smaller.");
+      if (videoFile?.size > maxProfilePhotoSize) {
+        setSaveMessage("Each photo must be 20 MB or smaller.");
         setSaveMessageIsError(true);
         return;
       }
@@ -880,6 +893,20 @@ export default function ProfilePage() {
     const pincode = value("pincode");
     const experienceYears = value("experienceYears");
     const minimumDailyFees = value("minimumDailyFees");
+    const profileVideoLinks = Array.from({ length: 3 }, (_, index) =>
+      value(`profileVideoLink${index + 1}`),
+    ).filter(Boolean);
+
+    for (const videoLink of profileVideoLinks) {
+      try {
+        const parsedLink = new URL(videoLink);
+        if (!["http:", "https:"].includes(parsedLink.protocol)) throw new Error();
+      } catch {
+        setSaveMessage("Enter a valid http:// or https:// video URL.");
+        setSaveMessageIsError(true);
+        return;
+      }
+    }
 
     const nextErrors = {};
     let hasError = false;
@@ -947,6 +974,7 @@ export default function ProfilePage() {
       dob: dobValue || null,
       bio: value("bio"),
       about: value("about"),
+      profileVideoLinks,
     };
     const payload = Object.fromEntries(
       Object.entries(nextValues).filter(([field, nextValue]) => {
@@ -1127,7 +1155,7 @@ export default function ProfilePage() {
         );
         const result = await response.json().catch(() => null);
         if (!response.ok) {
-          throw new Error(result?.message || `Could not clear profile video ${slot + 1}.`);
+          throw new Error(result?.message || `Could not clear profile photo ${slot + 1}.`);
         }
         setProfileVideos((videos) => videos.filter((video) => video.slot !== slot));
         const legacyUrls = Array.isArray(updatedUser.profileVideoUrls)
@@ -1142,7 +1170,7 @@ export default function ProfilePage() {
         setProfile(updatedUser);
         syncSavedUser(updatedUser);
         setDeletedVideoSlots((slots) => slots.filter((current) => current !== slot));
-        savedProfileParts.push(`Profile video ${slot + 1}`);
+        savedProfileParts.push(`Profile photo ${slot + 1}`);
       }
 
       for (const [slot, videoFile] of videoFiles.entries()) {
@@ -1157,7 +1185,7 @@ export default function ProfilePage() {
           ...videos.filter((video) => video.slot !== slot),
           savedVideo,
         ]);
-        savedProfileParts.push(`Profile video ${slot + 1}`);
+        savedProfileParts.push(`Profile photo ${slot + 1}`);
       }
 
       if (hasSampleChanges) {
@@ -2052,10 +2080,10 @@ export default function ProfilePage() {
 
               {isPhotographer && (
                 <section className={styles.editSection}>
-                  <h2>Profile photos and videos</h2>
+                  <h2>Profile photos</h2>
                   <p className={styles.sampleIntro}>
-                    Share up to five photos or videos with clients. JPG, PNG, GIF,
-                    WebP and supported video formats up to 20 MB each are accepted.
+                    Share up to five photos with clients. JPG, PNG, GIF,
+                    and WebP photos up to 20 MB each are accepted.
                   </p>
                   <div className={styles.videoSlots}>
                     {getProfileVideos(profile, profileVideos).map(
@@ -2063,56 +2091,43 @@ export default function ProfilePage() {
                         const isMarkedForRemoval =
                           deletedVideoSlots.includes(index);
                         const previewUrl = selectedVideoPreviews[index];
-                        const isImageMedia =
-                          selectedVideoFiles[index]?.type.startsWith("image/") ||
+                        const isExistingPhoto =
                           /\.(jpe?g|png|gif|webp)$/i.test(videoUrl || "");
                         return (
                           <article className={styles.videoUpload} key={index}>
                             <div className={styles.videoPreviewFrame}>
                               {previewUrl ||
-                              (videoUrl && !isMarkedForRemoval) ? (
-                                isImageMedia ? (
-                                  previewUrl ? (
-                                    <img
-                                      className={styles.videoPreview}
-                                      src={previewUrl}
-                                      alt={`Selected profile media ${index + 1}`}
-                                    />
-                                  ) : (
-                                    <Image
+                              (isExistingPhoto && !isMarkedForRemoval) ? (
+                                previewUrl ? (
+                                  <img
+                                    className={styles.videoPreview}
+                                    src={previewUrl}
+                                    alt={`Selected profile photo ${index + 1}`}
+                                  />
+                                ) : (
+                                  <Image
                                     className={styles.videoPreview}
                                     src={getGalleryImageUrl(videoUrl)}
                                     alt=""
                                     fill
                                     unoptimized
-                                    />
-                                  )
-                                ) : (
-                                  <video
-                                    className={styles.videoPreview}
-                                    src={
-                                      previewUrl || getGalleryImageUrl(videoUrl)
-                                    }
-                                    controls
-                                    playsInline
-                                    preload="metadata"
                                   />
                                 )
                               ) : (
-                                <p>No photo or video in slot {index + 1}.</p>
+                                <p>No photo in slot {index + 1}.</p>
                               )}
                             </div>
                             <div className={styles.imageUploadContent}>
                               <strong>
                                 {selectedVideoFiles[index]
-                                  ? selectedVideoFiles[index].type.startsWith("image/")
-                                    ? "New photo selected"
-                                    : "New video selected"
+                                  ? "New photo selected"
                                   : videoUrl
-                                    ? `Current media ${index + 1}`
-                                    : `Add photo or video ${index + 1}`}
+                                    ? isExistingPhoto
+                                      ? `Current photo ${index + 1}`
+                                      : `Add photo ${index + 1}`
+                                    : `Add photo ${index + 1}`}
                               </strong>
-                              <p>Maximum size: 20 MB per photo or video.</p>
+                              <p>Maximum size: 20 MB per photo.</p>
                               <label className={styles.imageSelectButton}>
                                 <input
                                   ref={(element) => {
@@ -2120,8 +2135,8 @@ export default function ProfilePage() {
                                   }}
                                   className={styles.imageFileInput}
                                   type="file"
-                                  accept={allowedProfileMediaTypes.join(",")}
-                                  aria-label={`Choose profile photo or video ${index + 1}`}
+                                  accept={allowedProfilePhotoTypes.join(",")}
+                                  aria-label={`Choose profile photo ${index + 1}`}
                                   onChange={(event) => {
                                     updateSelectedVideo(
                                       index,
@@ -2133,9 +2148,9 @@ export default function ProfilePage() {
                                 <span>
                                   {selectedVideoFiles[index]
                                     ? "Choose another"
-                                    : videoUrl
-                                      ? "Replace photo or video"
-                                        : "Choose photo or video"}
+                                    : isExistingPhoto
+                                      ? "Replace photo"
+                                        : "Choose photo"}
                                 </span>
                               </label>
                               {selectedVideoFiles[index] && (
@@ -2149,7 +2164,7 @@ export default function ProfilePage() {
                                 </small>
                               )}
                               {(selectedVideoFiles[index] ||
-                                (videoUrl && !isMarkedForRemoval) ||
+                                (isExistingPhoto && !isMarkedForRemoval) ||
                                 isMarkedForRemoval) && (
                                 <button
                                   className={styles.samplePhotoClear}
@@ -2176,14 +2191,12 @@ export default function ProfilePage() {
                                     ? "Undo clear"
                                     : selectedVideoFiles[index]
                                       ? "Clear selection"
-                                      : isImageMedia
-                                        ? "Clear photo"
-                                        : "Clear video"}
+                                      : "Clear photo"}
                                 </button>
                               )}
                               {isMarkedForRemoval && (
                                 <small className={styles.imageFileName}>
-                                  Video will be removed when you save.
+                                  Photo will be removed when you save.
                                 </small>
                               )}
                             </div>
@@ -2191,6 +2204,21 @@ export default function ProfilePage() {
                         );
                       },
                     )}
+                  </div>
+                  <div className={styles.profileVideoLinks}>
+                    <h3>Video links <span>(optional)</span></h3>
+                    {[1, 2, 3].map((number) => (
+                      <label key={number}>
+                        Video {number}
+                        <input
+                          type="url"
+                          name={`profileVideoLink${number}`}
+                          defaultValue={getProfileVideoLinks(profile)[number - 1]}
+                          placeholder="https://youtube.com/watch?v=..."
+                          maxLength={2048}
+                        />
+                      </label>
+                    ))}
                   </div>
                 </section>
               )}
@@ -2473,10 +2501,13 @@ export default function ProfilePage() {
                 <section className={styles.portfolioMediaSection}>
                   <header className={styles.portfolioMediaHeader}>
                     <h2>Portfolio media</h2>
-                    <p>Photos and videos shared on your profile</p>
+                    <p>Photos and video links shared on your profile</p>
                   </header>
                   {galleryPhotos.length > 0 ||
-                  getProfileVideos(profile, profileVideos).some(Boolean) ? (
+                  getProfileVideos(profile, profileVideos).some((url) =>
+                    /\.(jpe?g|png|gif|webp)$/i.test(url || ""),
+                  ) ||
+                  getProfileVideoLinks(profile).some(Boolean) ? (
                     <div className={styles.savedMediaWaterfall}>
                       {galleryPhotos.map((photo, index) => (
                         <figure
@@ -2495,39 +2526,46 @@ export default function ProfilePage() {
                       ))}
                       {getProfileVideos(profile, profileVideos)
                         .filter(Boolean)
+                        .filter((url) => /\.(jpe?g|png|gif|webp)$/i.test(url))
                         .map((videoUrl, index) => (
                           <figure
                             className={styles.savedMediaItem}
                             key={`${videoUrl}-${index}`}
                           >
-                            { /\.(jpe?g|png|gif|webp)$/i.test(videoUrl) ? (
-                              <Image
-                                className={styles.savedPortfolioPhoto}
-                                src={getGalleryImageUrl(videoUrl)}
-                                alt={`Profile photo ${index + 1}`}
-                                width={640}
-                                height={440}
-                                unoptimized
-                              />
-                            ) : (
-                              <video
-                                className={styles.savedProfileVideo}
-                                src={getGalleryImageUrl(videoUrl)}
-                                autoPlay
-                                controls
-                                loop
-                                muted
-                                playsInline
-                                preload="metadata"
-                              />
-                            )}
-                            <figcaption>Profile media {index + 1}</figcaption>
+                            <Image
+                              className={styles.savedPortfolioPhoto}
+                              src={getGalleryImageUrl(videoUrl)}
+                              alt={`Profile photo ${index + 1}`}
+                              width={640}
+                              height={440}
+                              unoptimized
+                            />
+                            <figcaption>Profile photo {index + 1}</figcaption>
                           </figure>
                         ))}
+                      {getProfileVideoLinks(profile).filter(Boolean).map(
+                        (videoLink, index) => (
+                          <figure
+                            className={styles.savedMediaItem}
+                            key={`${videoLink}-${index}`}
+                          >
+                            <a
+                              className={styles.profileVideoLinkCard}
+                              href={videoLink}
+                              target="_blank"
+                              rel="noreferrer"
+                            >
+                              <span>▶</span>
+                              <strong>Video {index + 1}</strong>
+                              <small>Open video</small>
+                            </a>
+                          </figure>
+                        ),
+                      )}
                     </div>
                   ) : (
                     <p className={styles.portfolioMediaEmpty}>
-                      No portfolio photos or videos uploaded yet.
+                      No portfolio media uploaded yet.
                     </p>
                   )}
                   <InfiniteScrollTrigger

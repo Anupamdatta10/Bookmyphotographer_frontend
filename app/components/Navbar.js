@@ -87,6 +87,7 @@ export default function Navbar({ current = "home", hideAuthActions = false, full
           alt="BookMyPhotografer logo"
           width={1520}
           height={860}
+          loading="eager"
         />
 
       </Link>

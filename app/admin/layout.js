@@ -145,6 +145,7 @@ export default function AdminLayout({ children }) {
               alt="BookMyPhotografer"
               width={2182}
               height={240}
+              loading="eager"
               unoptimized
             />
             <em>Admin</em>

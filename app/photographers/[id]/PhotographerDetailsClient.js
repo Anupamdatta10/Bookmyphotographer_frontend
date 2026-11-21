@@ -329,6 +329,17 @@ export default function PhotographerDetailsClient() {
           ? [photographer.profileVideoUrl]
           : []
   ).filter(Boolean);
+  const profileVideoLinks = (
+    Array.isArray(photographer?.profileVideoLinks)
+      ? photographer.profileVideoLinks
+      : Array.isArray(photographer?.videoLinks)
+        ? photographer.videoLinks
+        : []
+  ).filter(
+    (videoLink) =>
+      typeof videoLink === "string" &&
+      /^https?:\/\//i.test(videoLink.trim()),
+  );
   const portfolioMedia = [
     ...galleryPhotos.map((photo, index) => ({
       type: "photo",
@@ -341,6 +352,12 @@ export default function PhotographerDetailsClient() {
       src: getImageUrl(videoUrl),
       label: `Profile video ${index + 1}`,
       key: `${videoUrl}-${index}`,
+    })),
+    ...profileVideoLinks.map((videoLink, index) => ({
+      type: "video-link",
+      src: videoLink,
+      label: `Video link ${index + 1}`,
+      key: `${videoLink}-${index}`,
     })),
   ];
 
@@ -733,45 +750,60 @@ export default function PhotographerDetailsClient() {
                                 ) : portfolioMedia.length ? (
                                   <div className={styles.portfolioGrid}>
                                     {portfolioMedia.map((item) => (
-                                      <button
-                                        className={styles.portfolioItem}
-                                        key={item.key}
-                                        type="button"
-                                        aria-label={`Open ${item.label}`}
-                                        onClick={() => setSelectedMedia(item)}
-                                      >
-                                        {item.type === "photo" ? (
-                                          <Image
-                                            className={styles.portfolioPhoto}
-                                            src={item.src}
-                                            alt={item.label}
-                                            width={700}
-                                            height={500}
-                                            unoptimized
-                                          />
-                                        ) : (
-                                          <video
-                                            className={styles.portfolioVideo}
-                                            src={item.src}
-                                            autoPlay
-                                            loop
-                                            muted
-                                            playsInline
-                                            preload="metadata"
-                                            aria-label={item.label}
-                                          />
-                                        )}
-                                        <span className={styles.portfolioItemLabel}>
-                                          {item.type === "video" ? "▶ " : ""}
-                                          {item.label}
-                                        </span>
-                                      </button>
+                                      item.type === "video-link" ? (
+                                        <a
+                                          className={`${styles.portfolioItem} ${styles.portfolioLinkItem}`}
+                                          key={item.key}
+                                          href={item.src}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          aria-label={`Open ${item.label}`}
+                                        >
+                                          <b>▶</b>
+                                          <strong>{item.label}</strong>
+                                          <span>Open video</span>
+                                        </a>
+                                      ) : (
+                                        <button
+                                          className={styles.portfolioItem}
+                                          key={item.key}
+                                          type="button"
+                                          aria-label={`Open ${item.label}`}
+                                          onClick={() => setSelectedMedia(item)}
+                                        >
+                                          {item.type === "photo" ? (
+                                            <Image
+                                              className={styles.portfolioPhoto}
+                                              src={item.src}
+                                              alt={item.label}
+                                              width={700}
+                                              height={500}
+                                              unoptimized
+                                            />
+                                          ) : (
+                                            <video
+                                              className={styles.portfolioVideo}
+                                              src={item.src}
+                                              autoPlay
+                                              loop
+                                              muted
+                                              playsInline
+                                              preload="metadata"
+                                              aria-label={item.label}
+                                            />
+                                          )}
+                                          <span className={styles.portfolioItemLabel}>
+                                            {item.type === "video" ? "▶ " : ""}
+                                            {item.label}
+                                          </span>
+                                        </button>
+                                      )
                                     ))}
                                   </div>
                                 ) : (
                                   <p className={styles.galleryStatus}>
                                     This photographer has not uploaded any
-                                    portfolio photos or videos yet.
+                                    portfolio photos or video links yet.
                                   </p>
                                 )}
                                 <InfiniteScrollTrigger

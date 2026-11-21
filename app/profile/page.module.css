@@ -591,6 +591,67 @@
   object-fit: contain;
   object-position: center;
 }
+.profileVideoLinks {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.profileVideoLinks h3 {
+  grid-column: 1 / -1;
+  color: #263c47;
+  font-size: 14px;
+}
+.profileVideoLinks h3 span {
+  color: #71818d;
+  font-size: 11px;
+  font-weight: 500;
+}
+.profileVideoLinks label {
+  display: grid;
+  gap: 7px;
+  color: #263c47;
+  font-size: 12px;
+  font-weight: 700;
+}
+.profileVideoLinks input {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 11px;
+  border: 1px solid #d9e2e7;
+  border-radius: 4px;
+  color: #263c47;
+  font: inherit;
+  font-size: 12px;
+}
+.profileVideoLinkCard {
+  display: grid;
+  min-height: 150px;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  border-radius: 5px;
+  background: #172c3b;
+  color: #fff;
+  text-decoration: none;
+  text-align: center;
+}
+.profileVideoLinkCard span {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 50%;
+  background: #1878f2;
+}
+.profileVideoLinkCard strong {
+  font-size: 13px;
+}
+.profileVideoLinkCard small {
+  color: #cbd8df;
+  font-size: 11px;
+}
 .portfolioMediaSection {
   margin-top: 28px;
   padding: 22px;
@@ -968,6 +1029,9 @@
   font-size: 12px;
 }
 @media (max-width: 600px) {
+  .profileVideoLinks {
+    grid-template-columns: minmax(0, 1fr);
+  }
   .content {
     min-height: calc(100vh - 57px);
     padding: 25px 16px 48px;
