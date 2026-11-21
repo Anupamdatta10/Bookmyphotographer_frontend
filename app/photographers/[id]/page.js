@@ -3,44 +3,63 @@ import PhotographerDetailsClient from "./PhotographerDetailsClient";
 export async function generateStaticParams() {
   const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || "";
   const pageSize = 10;
-  const fallbackParam = [{ id: "_" }];
 
   if (!backendUrl) {
-    return fallbackParam;
+    throw new Error(
+      "NEXT_PUBLIC_BACKEND_URL is required to generate photographer detail pages.",
+    );
   }
 
-  try {
-    const params = [];
-    for (let page = 1; ; page += 1) {
-      const response = await fetch(
-        `${backendUrl}/api/users?type=PHOTOGRAPHER&page=${page}&limit=${pageSize}`,
-        { cache: "no-store" },
+  const params = [];
+  for (let page = 1; ; page += 1) {
+    const query = new URLSearchParams({
+      page: String(page),
+      limit: String(pageSize),
+    });
+    const response = await fetch(
+      `${backendUrl}/api/photographers?${query.toString()}`,
+      { cache: "no-store" },
+    );
+    if (!response.ok) {
+      throw new Error(
+        `Could not generate photographer detail pages: listing request failed with status ${response.status}.`,
       );
-      if (!response.ok) return fallbackParam;
-
-      const result = await response.json();
-      const users = Array.isArray(result) ? result : result.data || [];
-      params.push(
-        ...users
-          .map((user) => {
-            const id = user._id || user.id || user.userId;
-            return typeof id === "string" ? { id } : null;
-          })
-          .filter(Boolean),
-      );
-
-      if (
-        users.length < pageSize ||
-        (Number.isFinite(result.total) && page * pageSize >= result.total)
-      ) {
-        break;
-      }
     }
 
-    return params.length ? params : fallbackParam;
-  } catch {
-    return fallbackParam;
+    const result = await response.json();
+    if (!Array.isArray(result?.data)) {
+      throw new Error(
+        "Could not generate photographer detail pages: the listing response did not contain a data array.",
+      );
+    }
+
+    const photographers = result.data;
+    params.push(
+      ...photographers
+        .map((photographer) => {
+          const id =
+            photographer._id || photographer.id || photographer.userId;
+          return typeof id === "string" ? { id } : null;
+        })
+        .filter(Boolean),
+    );
+
+    const total =
+      result.total !== undefined &&
+      result.total !== null &&
+      result.total !== "" &&
+      Number.isFinite(Number(result.total))
+        ? Number(result.total)
+        : null;
+    if (
+      photographers.length < pageSize ||
+      (total !== null && page * pageSize >= total)
+    ) {
+      break;
+    }
   }
+
+  return params;
 }
 
 export default function PhotographerDetailsPage() {
