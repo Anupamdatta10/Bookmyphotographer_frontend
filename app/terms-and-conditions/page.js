@@ -297,7 +297,7 @@ const termsSections = [
         <p>
           Users should promptly report misconduct, harassment, threats, fraud,
           safety concerns or material breaches. Contact
-          bookmyfotographer@gmail.com or +91 9804060342 and provide relevant
+          BookMyFotographer and provide relevant
           details where safe and appropriate.
         </p>
         <p>

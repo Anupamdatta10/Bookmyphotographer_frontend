@@ -406,12 +406,6 @@ export default function PhotographerDetailsClient() {
         return;
       }
 
-      const durationHours = Number(bookingForm.durationHours);
-      // if (!Number.isInteger(durationHours) || durationHours < 1 || durationHours > 24) {
-      //   setBookingError("Duration must be a whole number between 1 and 24.");
-      //   return;
-      // }
-
       // Validate no occupied dates in the form
       const hasOccupiedDate = bookingForm.eventDate.some((date) => {
         const dateKey = date?.slice(0, 10);
@@ -442,7 +436,7 @@ export default function PhotographerDetailsClient() {
             userId: user.userId,
             eventDate: bookingForm.eventDate.filter(Boolean),
             eventLocation: bookingForm.eventLocation,
-            durationHours,
+            durationHours: bookingForm.durationHours,
             notes: bookingForm.notes,
             specialRequirements: bookingForm.specialRequirements,
           }),
@@ -702,7 +696,14 @@ export default function PhotographerDetailsClient() {
                                         <ul>
                                           {selectedDates.map((date) => (
                                             <li key={date}>
-                                              {new Date(`${date}T00:00:00`).toLocaleDateString()}
+                                              {new Date(`${date}T00:00:00`).toLocaleDateString(
+                                                "en-GB",
+                                                {
+                                                  day: "2-digit",
+                                                  month: "2-digit",
+                                                  year: "numeric",
+                                                },
+                                              )}
                                             </li>
                                           ))}
                                         </ul>
@@ -1096,7 +1097,13 @@ export default function PhotographerDetailsClient() {
                                               <p>Selected dates:</p>
                                               <ul>
                                                 {bookingForm.eventDate.map((date, idx) => {
-                                                  const label = new Date(date).toLocaleDateString();
+                                                  const label = new Date(
+                                                    date,
+                                                  ).toLocaleDateString("en-GB", {
+                                                    day: "2-digit",
+                                                    month: "2-digit",
+                                                    year: "numeric",
+                                                  });
                                                   return (
                                                     <li key={idx}>
                                                       {label}
