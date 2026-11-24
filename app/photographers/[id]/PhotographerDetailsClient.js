@@ -47,10 +47,11 @@ function getDateKey(date, day) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-export default function PhotographerDetailsClient() {
+export default function PhotographerDetailsClient({ requestedId } = {}) {
   const params = useParams();
   const router = useRouter();
-  const photographerId = params.id;
+  const photographerId = requestedId === undefined ? params.id : requestedId;
+  const missingPhotographerId = photographerId === "";
   const [photographer, setPhotographer] = useState(null);
   const [profileVideos, setProfileVideos] = useState([]);
   const [galleryPhotos, setGalleryPhotos] = useState([]);
@@ -167,7 +168,8 @@ export default function PhotographerDetailsClient() {
   }, []);
 
   useEffect(() => {
-    if (typeof photographerId !== "string") return;
+    if (typeof photographerId !== "string" || !photographerId) return;
+
     let isCurrent = true;
 
     async function loadPhotographer() {
@@ -480,15 +482,20 @@ export default function PhotographerDetailsClient() {
           <span aria-hidden="true">←</span> Back to photographers
         </Link>
 
-        {isLoading && (
+        {isLoading && !missingPhotographerId && (
           <p className={styles.stateMessage} role="status">
             Loading photographer profile...
           </p>
         )}
-        {!isLoading && errorMessage && !photographer && (
+        {(missingPhotographerId ||
+          (!isLoading && errorMessage && !photographer)) && (
           <section className={styles.errorCard} role="alert">
             <h1>Photographer not found</h1>
-            <p>{errorMessage}</p>
+            <p>
+              {missingPhotographerId
+                ? "A photographer ID is required in this link."
+                : errorMessage}
+            </p>
             <Link href="/#photographers">Browse photographers</Link>
           </section>
         )}

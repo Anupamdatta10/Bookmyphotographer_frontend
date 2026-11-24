@@ -16,7 +16,7 @@ export default function PhotographerCard({ person }) {
     <article className={styles.card}>
       <Link
         className={styles.cardOpen}
-        href={`/photographers/${encodeURIComponent(person._id)}`}
+        href={`/photographers/profile?id=${encodeURIComponent(person._id)}`}
         aria-label={`View ${person.name}'s photographer profile`}
       >
         <div className={styles.photo}>
