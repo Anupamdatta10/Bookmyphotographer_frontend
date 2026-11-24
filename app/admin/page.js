@@ -437,7 +437,11 @@ export default function AdminPage() {
                         <button
                           type="button"
                           className={styles.personLink}
-                          onClick={() => router.push(`/admin/photographers/${photographer.id}`)}
+                          onClick={() =>
+                            router.push(
+                              `/admin/photographers/details?id=${encodeURIComponent(photographer.id)}`,
+                            )
+                          }
                         >
                           <div className={styles.person}>
                           <span className={styles.personAvatar}>
@@ -476,7 +480,11 @@ export default function AdminPage() {
                           <button
                             type="button"
                             className={styles.secondaryAction}
-                            onClick={() => router.push(`/admin/photographers/${photographer.id}`)}
+                            onClick={() =>
+                              router.push(
+                                `/admin/photographers/details?id=${encodeURIComponent(photographer.id)}`,
+                              )
+                            }
                           >
                             View details
                           </button>

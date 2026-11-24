@@ -68,10 +68,10 @@ function initials(name) {
     .join("") || "P";
 }
 
-export default function PhotographerDetailsPage() {
+export default function PhotographerDetailsPage({ photographerId: requestedId }) {
   const params = useParams();
   const router = useRouter();
-  const photographerId = params?.id;
+  const photographerId = requestedId || params?.id;
   const [photographer, setPhotographer] = useState(null);
   const [gallery, setGallery] = useState([]);
   const [galleryPage, setGalleryPage] = useState(1);
