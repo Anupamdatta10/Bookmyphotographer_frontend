@@ -59,7 +59,7 @@ export async function generateStaticParams() {
     }
   }
 
-  return params;
+  return params.length ? params : [{ id: "_" }];
 }
 
 export default function PhotographerDetailsPage() {

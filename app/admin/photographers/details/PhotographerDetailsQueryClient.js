@@ -1,14 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import PhotographerDetailsClient from "../[id]/PhotographerDetailsClient";
 
 export default function PhotographerDetailsQueryClient() {
-  const [photographerId] = useState(() =>
-    typeof window === "undefined"
-      ? ""
-      : new URLSearchParams(window.location.search).get("id") || "",
-  );
+  const searchParams = useSearchParams();
+  const photographerId = searchParams.get("id");
 
+  if (!photographerId) {
+    return <p role="alert">Photographer ID is missing from this link.</p>;
+  }
   return <PhotographerDetailsClient photographerId={photographerId} />;
 }
