@@ -4,9 +4,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  basePath: process.env.GITHUB_ACTIONS ? "/photoconnect" : "",
   env: {
-    NEXT_PUBLIC_BASE_PATH: process.env.GITHUB_ACTIONS ? "/photoconnect" : "",
+    NEXT_PUBLIC_BASE_PATH: "",
   },
   trailingSlash: true,
 };
