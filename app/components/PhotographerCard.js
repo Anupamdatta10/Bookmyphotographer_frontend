@@ -52,7 +52,7 @@ export default function PhotographerCard({ person }) {
             {person.tags.length ? (
               person.tags.slice(0, 3).map((tag) => <span key={tag}>{tag}</span>)
             ) : (
-              <span>No specialties listed</span>
+              <span>No Gears listed</span>
             )}
           </div>
           {/* <p className={styles.rating}>

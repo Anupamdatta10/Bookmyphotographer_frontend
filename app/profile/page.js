@@ -49,7 +49,7 @@ const editableSections = [
     title: "Photographer profile",
     fields: [
       ["proffession", "Profession", "select"],
-      ["specialties", "Specialties", "text"],
+      ["specialties", "Gears", "text"],
       ["languages", "Languages", "text"],
       ["experienceYears", "Experience (years)", "number"],
       ["minimumDailyFees", "Minimum Daily Fees (₹)", "number"],
@@ -87,7 +87,7 @@ const profileSections = [
       ["type", "Account type"],
       ["status", "Status"],
       ["proffession", "Profession"],
-      ["specialties", "Specialties"],
+      ["specialties", "Gears"],
       ["languages", "Languages"],
       ["experienceYears", "Experience"],
       ["minimumDailyFees", "Minimum Daily Fees"],
