@@ -142,7 +142,7 @@ export default function AdminLayout({ children }) {
             <Image
               className={styles.brandLogo}
             src={`${basePath}/main_logo.png`}
-              alt="BookMyPhotografer"
+              alt="BookMyFotographer"
               width={2182}
               height={240}
               unoptimized
@@ -180,7 +180,7 @@ export default function AdminLayout({ children }) {
             Logout
           </button>
         </nav>
-        <div className={styles.sidebarFooter}>BookMyPhotografer Admin v1.0</div>
+        <div className={styles.sidebarFooter}>BookMyFotographer Admin v1.0</div>
       </aside>
 
       {sidebarOpen && (

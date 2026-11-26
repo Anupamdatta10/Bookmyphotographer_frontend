@@ -40,13 +40,22 @@ export default function PhotographerCard({ person }) {
               <span>No specialties listed</span>
             )}
           </div>
-          {/* <p className={styles.rating}>
-            {person.rating > 0 ? (
-              <>★ <b>{person.rating.toFixed(1)}</b> <small>({person.reviews} reviews)</small></>
-            ) : (
-              <small>No reviews yet</small>
-            )}
-          </p> */}
+          <div
+            className={styles.rating}
+            aria-label={
+              person.rating > 0
+                ? `${person.rating.toFixed(1)} out of 5 stars`
+                : "No rating yet"
+            }
+          >
+            <span className={styles.ratingStars} aria-hidden="true">
+              <span>★★★★★</span>
+              <span style={{ width: `${Math.max(0, Math.min(5, person.rating)) * 20}%` }}>
+                ★★★★★
+              </span>
+            </span>
+            <b>{person.rating.toFixed(1)}</b>
+          </div>
         </div>
       </Link>
     </article>

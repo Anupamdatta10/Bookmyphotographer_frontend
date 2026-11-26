@@ -49,7 +49,7 @@ export default function AboutPageClient() {
           <p className={styles.eyebrow}>ABOUT US</p>
           <h1>Bringing People, Photographers & Moments Together.</h1>
           <p className={styles.tagline}>
-            BookMyPhotografer is a new-age digital marketplace built to connect people
+            BookMyFotographer is a new-age digital marketplace built to connect people
             and businesses with talented freelance photographers and videographers
             through a simple, convenient, and flexible booking platform.
           </p>
@@ -78,7 +78,7 @@ export default function AboutPageClient() {
             through one common digital platform.
           </p>
           <p>
-            BookMyPhotografer aims to simplify this process by creating a marketplace
+            BookMyFotographer aims to simplify this process by creating a marketplace
             where customers can discover freelance photography and videography
             professionals, explore their work, and hire them according to their
             specific requirements.
@@ -130,7 +130,7 @@ export default function AboutPageClient() {
         <div className={styles.container}>
           <h2>Your Moments. Their Creativity. One Platform.</h2>
           <p>
-            BookMyPhotografer is not just about booking a photographer. It&apos;s
+            BookMyFotographer is not just about booking a photographer. It&apos;s
             about creating opportunities for creators and making professional
             photography accessible to everyone.
           </p>

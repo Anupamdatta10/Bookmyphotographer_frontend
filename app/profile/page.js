@@ -2253,7 +2253,7 @@ export default function ProfilePage() {
                   }}
                 />
                 <div className={styles.identityCopy}>
-                  <h2>{profile.name || "BookMyPhotografer user"}</h2>
+                  <h2>{profile.name || "BookMyFotographer user"}</h2>
                   <p>{profile.type == 'PARTNER'?'CLIENT':profile.type}</p>
                   <span>{profile.email}</span>
                 </div>

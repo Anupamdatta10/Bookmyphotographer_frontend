@@ -1,4 +1,5 @@
 import "./globals.css";
+import WhatsAppButton from "./components/WhatsAppButton";
 
 export const metadata = {
   title: "BookMyPhotographer | Find & Book Photographers Online",
@@ -28,7 +29,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        {children}
+        <WhatsAppButton />
+      </body>
     </html>
   );
 }

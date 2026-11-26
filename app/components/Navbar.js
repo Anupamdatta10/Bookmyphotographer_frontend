@@ -84,7 +84,7 @@ export default function Navbar({ current = "home", hideAuthActions = false, full
       <Link href="/" className={styles.logo}>
         <Image
           src={`${basePath}/main_logo.png`}
-          alt="BookMyPhotografer logo"
+          alt="BookMyFotographer logo"
           width={1520}
           height={860}
         />

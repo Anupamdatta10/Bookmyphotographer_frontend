@@ -612,10 +612,28 @@
   padding: 6px 9px;
 }
 .rating {
+  display: flex;
+  align-items: center;
+  gap: 7px;
   font-size: 14px;
   color: #eea11c;
   margin-top: auto;
   padding-top: 14px;
+}
+.ratingStars {
+  position: relative;
+  display: inline-block;
+  color: #d5dce1;
+  letter-spacing: 1px;
+  line-height: 1;
+  white-space: nowrap;
+}
+.ratingStars span:last-child {
+  position: absolute;
+  inset: 0 auto 0 0;
+  overflow: hidden;
+  color: #eea11c;
+  white-space: nowrap;
 }
 .rating b {
   color: #394b59;

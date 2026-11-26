@@ -40,6 +40,7 @@ function mapPhotographer(user) {
         : "Not available",
     status,
     isBlocked: Boolean(user.isBlocked),
+    rating: Number.isFinite(Number(user.rating)) ? Number(user.rating) : 0,
     initials: name
       .split(/\s+/)
       .filter(Boolean)
@@ -79,7 +80,40 @@ export default function AdminPage() {
   const [statusError, setStatusError] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [savingPhotographerId, setSavingPhotographerId] = useState("");
+  const [ratingDrafts, setRatingDrafts] = useState({});
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+  const [dropdownOpenUpward, setDropdownOpenUpward] = useState({});
+  const dropdownWrapperRefs = useRef({});
   const loadingMoreRef = useRef(false);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      const wrapper = dropdownWrapperRefs.current[openDropdownId];
+      if (wrapper && !wrapper.contains(event.target)) {
+        setOpenDropdownId(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [openDropdownId]);
+
+  // Calculate if dropdown should open upward when it opens
+  useEffect(() => {
+    if (openDropdownId) {
+      const wrapper = dropdownWrapperRefs.current[openDropdownId];
+      if (wrapper) {
+        const rect = wrapper.getBoundingClientRect();
+        const dropdownHeight = 280; // approximate max height of dropdown
+        const spaceBelow = window.innerHeight - rect.bottom;
+        const spaceAbove = rect.top;
+        
+        // Open upward if there's not enough space below but enough space above
+        const shouldOpenUp = spaceBelow < dropdownHeight && spaceAbove > dropdownHeight;
+        setDropdownOpenUpward(prev => ({ ...prev, [openDropdownId]: shouldOpenUp }));
+      }
+    }
+  }, [openDropdownId]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -218,12 +252,13 @@ export default function AdminPage() {
       if (!response.ok) {
         throw new Error(result?.message || "Could not update photographer status.");
       }
-      const updatedPhotographer = mapPhotographer(result?.data ?? result);
-      setPhotographers((current) =>
-        current.map((photographer) =>
-          photographer.id === id ? updatedPhotographer : photographer,
-        ),
-      );
+      const updatedUser = result?.data ?? result ?? {};
+      setPhotographers((current) => current.map((photographer) => {
+        if (photographer.id !== id) return photographer;
+        const nextStatus = updatedUser.status ?? (status === "Approved" ? "active" : "inactive");
+        return { ...photographer, status: statusLabels[nextStatus] || status };
+      }));
+      setOpenDropdownId(null);
     } catch (error) {
       setStatusError(
         error.message || "Could not update photographer status. Please try again.",
@@ -261,15 +296,60 @@ export default function AdminPage() {
       if (!response.ok) {
         throw new Error(result?.message || "Could not update photographer access.");
       }
-      const updatedPhotographer = mapPhotographer(result?.data ?? result);
-      setPhotographers((current) =>
-        current.map((item) =>
-          item.id === photographer.id ? updatedPhotographer : item,
-        ),
-      );
+      const updatedUser = result?.data ?? result ?? {};
+      setPhotographers((current) => current.map((item) =>
+        item.id === photographer.id
+          ? { ...item, isBlocked: updatedUser.isBlocked ?? !photographer.isBlocked }
+          : item,
+      ));
+      setOpenDropdownId(null);
     } catch (error) {
       setStatusError(
         error.message || "Could not update photographer access. Please try again.",
+      );
+    } finally {
+      setSavingPhotographerId("");
+    }
+  }
+
+  async function updateRating(id, rating) {
+    setSavingPhotographerId(id);
+    setStatusError("");
+    try {
+      const token = getAccessToken();
+      if (!token) {
+        router.replace("/admin/security");
+        return;
+      }
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/${encodeURIComponent(id)}/rating`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ rating: Number(rating) }),
+        },
+      );
+      if (response.status === 401 || response.status === 403) {
+        handleUnauthorized(router);
+        return;
+      }
+      const result = await response.json().catch(() => null);
+      if (!response.ok) {
+        throw new Error(result?.message || "Could not update photographer rating.");
+      }
+      const updatedUser = result?.data ?? result ?? {};
+      setPhotographers((current) => current.map((item) =>
+        item.id === id
+          ? { ...item, rating: Number(updatedUser.rating ?? rating) }
+          : item,
+      ));
+      setRatingDrafts((current) => ({ ...current, [id]: String(updatedUser.rating ?? rating) }));
+    } catch (error) {
+      setStatusError(
+        error.message || "Could not update photographer rating. Please try again.",
       );
     } finally {
       setSavingPhotographerId("");
@@ -396,21 +476,21 @@ export default function AdminPage() {
                 <tbody>
                   {isLoadingPhotographers && (
                     <tr>
-                      <td className={styles.empty} colSpan="5">
+                      <td className={styles.empty} colSpan="6">
                         Loading photographer records...
                       </td>
                     </tr>
                   )}
                   {!isLoadingPhotographers && photographersError && (
                     <tr>
-                      <td className={styles.empty} colSpan="5" role="alert">
+                      <td className={styles.empty} colSpan="6" role="alert">
                         {photographersError}
                       </td>
                     </tr>
                   )}
                   {!isLoadingPhotographers && !photographersError && statusError && (
                     <tr>
-                      <td className={styles.actionError} colSpan="5" role="alert">
+                      <td className={styles.actionError} colSpan="6" role="alert">
                         {statusError}
                       </td>
                     </tr>
@@ -472,69 +552,115 @@ export default function AdminPage() {
                         </span>
                       </td>
                       <td>
-                        <div className={styles.rowActions}>
+                        <div
+                          ref={(el) => { dropdownWrapperRefs.current[photographer.id] = el; }}
+                          className={`${styles.dropdownWrapper} ${openDropdownId === photographer.id ? styles.dropdownWrapperOpen : ""}`}
+                          data-dropdown-id={photographer.id}
+                        >
                           <button
                             type="button"
-                            className={styles.secondaryAction}
-                            onClick={() => router.push(`/admin/photographers/${photographer.id}`)}
+                            className={styles.dropdownTrigger}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenDropdownId(openDropdownId === photographer.id ? null : photographer.id);
+                            }}
+                            aria-expanded={openDropdownId === photographer.id}
+                            aria-haspopup="true"
                           >
-                            View details
+                            Actions
+                            <span className={openDropdownId === photographer.id ? styles.dropdownArrowOpen : styles.dropdownArrow}>▼</span>
                           </button>
-                          {photographer.status === "Pending" && (
-                            <>
-                              <button
-                                className={styles.approve}
-                                disabled={savingPhotographerId === photographer.id}
-                                onClick={() =>
-                                  updateStatus(photographer.id, "Approved")
-                                }
-                              >
-                                Approve
-                              </button>
-                              <button
-                                className={styles.reject}
-                                disabled={savingPhotographerId === photographer.id}
-                                onClick={() =>
-                                  updateStatus(photographer.id, "Deactivated")
-                                }
-                              >
-                                Reject
-                              </button>
-                            </>
-                          )}
-                          {photographer.status === "Approved" && (
-                            <button
-                              className={styles.secondaryAction}
-                              disabled={savingPhotographerId === photographer.id}
-                              onClick={() =>
-                                updateStatus(photographer.id, "Deactivated")
-                              }
+                          {openDropdownId === photographer.id && (
+                            <div
+                              className={`${styles.dropdownMenu} ${dropdownOpenUpward[photographer.id] ? styles.dropdownMenuUp : ''}`}
+                              role="menu"
                             >
-                              Deactivate
-                            </button>
+                              <button
+                                type="button"
+                                className={styles.dropdownItem}
+                                role="menuitem"
+                                onClick={() => router.push(`/admin/photographers/${photographer.id}`)}
+                              >
+                                View details
+                              </button>
+                              {photographer.status === "Pending" && (
+                                <>
+                                  <button
+                                    type="button"
+                                    className={`${styles.dropdownItem} ${styles.dropdownItemApprove}`}
+                                    role="menuitem"
+                                    disabled={savingPhotographerId === photographer.id}
+                                    onClick={() => updateStatus(photographer.id, "Approved")}
+                                  >
+                                    Approve
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={`${styles.dropdownItem} ${styles.dropdownItemReject}`}
+                                    role="menuitem"
+                                    disabled={savingPhotographerId === photographer.id}
+                                    onClick={() => updateStatus(photographer.id, "Deactivated")}
+                                  >
+                                    Reject
+                                  </button>
+                                </>
+                              )}
+                              {photographer.status === "Approved" && (
+                                <button
+                                  type="button"
+                                  className={styles.dropdownItem}
+                                  role="menuitem"
+                                  disabled={savingPhotographerId === photographer.id}
+                                  onClick={() => updateStatus(photographer.id, "Deactivated")}
+                                >
+                                  Deactivate
+                                </button>
+                              )}
+                              {photographer.status === "Deactivated" && (
+                                <button
+                                  type="button"
+                                  className={styles.dropdownItem}
+                                  role="menuitem"
+                                  disabled={savingPhotographerId === photographer.id}
+                                  onClick={() => updateStatus(photographer.id, "Approved")}
+                                >
+                                  Reactivate
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                className={`${styles.dropdownItem} ${photographer.isBlocked ? styles.dropdownItemApprove : styles.dropdownItemReject}`}
+                                role="menuitem"
+                                disabled={savingPhotographerId === photographer.id}
+                                onClick={() => togglePhotographerBlock(photographer)}
+                              >
+                                {photographer.isBlocked ? "Unblock" : "Block"}
+                              </button>
+                              <div className={styles.dropdownItemRating}>
+                                <label className={styles.ratingLabel} htmlFor={`rating-${photographer.id}`}>Rating (0–5)</label>
+                                <input
+                                  id={`rating-${photographer.id}`}
+                                  className={styles.ratingInput}
+                                  type="number"
+                                  min="0"
+                                  max="5"
+                                  step="any"
+                                  value={ratingDrafts[photographer.id] ?? String(photographer.rating)}
+                                  onChange={(event) => setRatingDrafts((current) => ({ ...current, [photographer.id]: event.target.value }))}
+                                  disabled={savingPhotographerId === photographer.id}
+                                  aria-label={`Rating for ${photographer.name}, from 0 to 5`}
+                                />
+                                <button
+                                  type="button"
+                                  className={styles.saveRatingButton}
+                                  disabled={savingPhotographerId === photographer.id || ratingDrafts[photographer.id] === "" || !Number.isFinite(Number(ratingDrafts[photographer.id] ?? photographer.rating)) || Number(ratingDrafts[photographer.id] ?? photographer.rating) < 0 || Number(ratingDrafts[photographer.id] ?? photographer.rating) > 5}
+                                  onClick={() => updateRating(photographer.id, ratingDrafts[photographer.id] ?? photographer.rating)}
+                                >
+                                  {savingPhotographerId === photographer.id ? "Saving…" : "Save"}
+                                </button>
+                              </div>
+                            </div>
                           )}
-                          {photographer.status === "Deactivated" && (
-                            <button
-                              className={styles.secondaryAction}
-                              disabled={savingPhotographerId === photographer.id}
-                              onClick={() =>
-                                updateStatus(photographer.id, "Approved")
-                              }
-                            >
-                              Reactivate
-                            </button>
-                          )}
-                          <button
-                            className={
-                              photographer.isBlocked
-                                ? styles.approve
-                                : styles.reject
-                            }
-                            disabled={savingPhotographerId === photographer.id}
-                            onClick={() => togglePhotographerBlock(photographer)}
-                          >
-                            {photographer.isBlocked ? "Unblock" : "Block"}
-                          </button>
                         </div>
                       </td>
                     </tr>

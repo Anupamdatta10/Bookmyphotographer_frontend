@@ -14,7 +14,7 @@ export default function Footer() {
           <Image
             className={styles.footerLogoImage}
             src={`${basePath}/main_logo.png`}
-            alt="BookMyPhotografer logo"
+            alt="BookMyFotographer logo"
             width={2182}
             height={240}
             unoptimized
@@ -69,7 +69,7 @@ export default function Footer() {
         </a>
       </div>
       <small className={styles.copyright}>
-        © {new Date().getFullYear()} BookMyPhotografer. All rights reserved.
+        © {new Date().getFullYear()} BookMyFotographer. All rights reserved.
       </small>
     </footer>
   );

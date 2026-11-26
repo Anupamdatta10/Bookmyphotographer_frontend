@@ -540,16 +540,18 @@ export default function PhotographerDetailsClient() {
                 </div>
                 <p className={styles.location}>● {location}</p>
                 <div className={styles.stats}>
-                  {/* <span>
-                    {Number(photographer.rating) > 0 ? (
-                      <>
-                        ★ <b>{Number(photographer.rating).toFixed(1)}</b> (
-                        {Number(photographer.totalReviews) || 0} reviews)
-                      </>
-                    ) : (
-                      "No reviews yet"
-                    )}
-                  </span> */}
+                  <span
+                    className={styles.ratingDisplay}
+                    aria-label={`${Number(photographer.rating) || 0} out of 5 stars`}
+                  >
+                    <span className={styles.ratingStars} aria-hidden="true">
+                      <span>★★★★★</span>
+                      <span style={{ width: `${Math.max(0, Math.min(5, Number(photographer.rating) || 0)) * 20}%` }}>
+                        ★★★★★
+                      </span>
+                    </span>
+                    <b>{(Number(photographer.rating) || 0).toFixed(1)}</b>
+                  </span>
                   <span>♣ {experience || "No"} experience</span>
                 </div>
                 {specialties.length > 0 && (
