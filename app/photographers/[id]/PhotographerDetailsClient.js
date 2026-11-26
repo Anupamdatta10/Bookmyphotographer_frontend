@@ -47,10 +47,11 @@ function getDateKey(date, day) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
-export default function PhotographerDetailsClient() {
+export default function PhotographerDetailsClient({ requestedId } = {}) {
   const params = useParams();
   const router = useRouter();
-  const photographerId = params.id;
+  const photographerId = requestedId === undefined ? params.id : requestedId;
+  const missingPhotographerId = photographerId === "";
   const [photographer, setPhotographer] = useState(null);
   const [profileVideos, setProfileVideos] = useState([]);
   const [galleryPhotos, setGalleryPhotos] = useState([]);
@@ -167,7 +168,8 @@ export default function PhotographerDetailsClient() {
   }, []);
 
   useEffect(() => {
-    if (typeof photographerId !== "string") return;
+    if (typeof photographerId !== "string" || !photographerId) return;
+
     let isCurrent = true;
 
     async function loadPhotographer() {
@@ -329,6 +331,17 @@ export default function PhotographerDetailsClient() {
           ? [photographer.profileVideoUrl]
           : []
   ).filter(Boolean);
+  const profileVideoLinks = (
+    Array.isArray(photographer?.profileVideoLinks)
+      ? photographer.profileVideoLinks
+      : Array.isArray(photographer?.videoLinks)
+        ? photographer.videoLinks
+        : []
+  ).filter(
+    (videoLink) =>
+      typeof videoLink === "string" &&
+      /^https?:\/\//i.test(videoLink.trim()),
+  );
   const portfolioMedia = [
     ...galleryPhotos.map((photo, index) => ({
       type: "photo",
@@ -337,10 +350,16 @@ export default function PhotographerDetailsClient() {
       key: photo._id || `${photo.link}-${index}`,
     })),
     ...profileVideoUrls.map((videoUrl, index) => ({
-      type: "video",
+      type: "photo",
       src: getImageUrl(videoUrl),
-      label: `Profile video ${index + 1}`,
+      label: `Profile photo ${index + 1}`,
       key: `${videoUrl}-${index}`,
+    })),
+    ...profileVideoLinks.map((videoLink, index) => ({
+      type: "video-link",
+      src: videoLink,
+      label: `Video link ${index + 1}`,
+      key: `${videoLink}-${index}`,
     })),
   ];
 
@@ -389,12 +408,6 @@ export default function PhotographerDetailsClient() {
         return;
       }
 
-      const durationHours = Number(bookingForm.durationHours);
-      // if (!Number.isInteger(durationHours) || durationHours < 1 || durationHours > 24) {
-      //   setBookingError("Duration must be a whole number between 1 and 24.");
-      //   return;
-      // }
-
       // Validate no occupied dates in the form
       const hasOccupiedDate = bookingForm.eventDate.some((date) => {
         const dateKey = date?.slice(0, 10);
@@ -425,7 +438,7 @@ export default function PhotographerDetailsClient() {
             userId: user.userId,
             eventDate: bookingForm.eventDate.filter(Boolean),
             eventLocation: bookingForm.eventLocation,
-            durationHours,
+            durationHours: bookingForm.durationHours,
             notes: bookingForm.notes,
             specialRequirements: bookingForm.specialRequirements,
           }),
@@ -469,15 +482,20 @@ export default function PhotographerDetailsClient() {
           <span aria-hidden="true">←</span> Back to photographers
         </Link>
 
-        {isLoading && (
+        {isLoading && !missingPhotographerId && (
           <p className={styles.stateMessage} role="status">
             Loading photographer profile...
           </p>
         )}
-        {!isLoading && errorMessage && !photographer && (
+        {(missingPhotographerId ||
+          (!isLoading && errorMessage && !photographer)) && (
           <section className={styles.errorCard} role="alert">
             <h1>Photographer not found</h1>
-            <p>{errorMessage}</p>
+            <p>
+              {missingPhotographerId
+                ? "A photographer ID is required in this link."
+                : errorMessage}
+            </p>
             <Link href="/#photographers">Browse photographers</Link>
           </section>
         )}
@@ -687,7 +705,14 @@ export default function PhotographerDetailsClient() {
                                         <ul>
                                           {selectedDates.map((date) => (
                                             <li key={date}>
-                                              {new Date(`${date}T00:00:00`).toLocaleDateString()}
+                                              {new Date(`${date}T00:00:00`).toLocaleDateString(
+                                                "en-GB",
+                                                {
+                                                  day: "2-digit",
+                                                  month: "2-digit",
+                                                  year: "numeric",
+                                                },
+                                              )}
                                             </li>
                                           ))}
                                         </ul>
@@ -735,45 +760,60 @@ export default function PhotographerDetailsClient() {
                                 ) : portfolioMedia.length ? (
                                   <div className={styles.portfolioGrid}>
                                     {portfolioMedia.map((item) => (
-                                      <button
-                                        className={styles.portfolioItem}
-                                        key={item.key}
-                                        type="button"
-                                        aria-label={`Open ${item.label}`}
-                                        onClick={() => setSelectedMedia(item)}
-                                      >
-                                        {item.type === "photo" ? (
-                                          <Image
-                                            className={styles.portfolioPhoto}
-                                            src={item.src}
-                                            alt={item.label}
-                                            width={700}
-                                            height={500}
-                                            unoptimized
-                                          />
-                                        ) : (
-                                          <video
-                                            className={styles.portfolioVideo}
-                                            src={item.src}
-                                            autoPlay
-                                            loop
-                                            muted
-                                            playsInline
-                                            preload="metadata"
-                                            aria-label={item.label}
-                                          />
-                                        )}
-                                        <span className={styles.portfolioItemLabel}>
-                                          {item.type === "video" ? "▶ " : ""}
-                                          {item.label}
-                                        </span>
-                                      </button>
+                                      item.type === "video-link" ? (
+                                        <a
+                                          className={`${styles.portfolioItem} ${styles.portfolioLinkItem}`}
+                                          key={item.key}
+                                          href={item.src}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          aria-label={`Open ${item.label}`}
+                                        >
+                                          <b>▶</b>
+                                          <strong>{item.label}</strong>
+                                          <span>Open video</span>
+                                        </a>
+                                      ) : (
+                                        <button
+                                          className={styles.portfolioItem}
+                                          key={item.key}
+                                          type="button"
+                                          aria-label={`Open ${item.label}`}
+                                          onClick={() => setSelectedMedia(item)}
+                                        >
+                                          {item.type === "photo" ? (
+                                            <Image
+                                              className={styles.portfolioPhoto}
+                                              src={item.src}
+                                              alt={item.label}
+                                              width={700}
+                                              height={500}
+                                              unoptimized
+                                            />
+                                          ) : (
+                                            <video
+                                              className={styles.portfolioVideo}
+                                              src={item.src}
+                                              autoPlay
+                                              loop
+                                              muted
+                                              playsInline
+                                              preload="metadata"
+                                              aria-label={item.label}
+                                            />
+                                          )}
+                                          <span className={styles.portfolioItemLabel}>
+                                            {item.type === "video" ? "▶ " : ""}
+                                            {item.label}
+                                          </span>
+                                        </button>
+                                      )
                                     ))}
                                   </div>
                                 ) : (
                                   <p className={styles.galleryStatus}>
                                     This photographer has not uploaded any
-                                    portfolio photos or videos yet.
+                                    portfolio photos or video links yet.
                                   </p>
                                 )}
                                 <InfiniteScrollTrigger
@@ -1066,7 +1106,13 @@ export default function PhotographerDetailsClient() {
                                               <p>Selected dates:</p>
                                               <ul>
                                                 {bookingForm.eventDate.map((date, idx) => {
-                                                  const label = new Date(date).toLocaleDateString();
+                                                  const label = new Date(
+                                                    date,
+                                                  ).toLocaleDateString("en-GB", {
+                                                    day: "2-digit",
+                                                    month: "2-digit",
+                                                    year: "numeric",
+                                                  });
                                                   return (
                                                     <li key={idx}>
                                                       {label}

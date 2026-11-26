@@ -3,11 +3,20 @@ import Link from "next/link";
 import styles from "../page.module.css";
 
 export default function PhotographerCard({ person }) {
+  const professionValue = Array.isArray(person.proffession)
+    ? person.proffession.filter(Boolean).join(" and ")
+    : person.proffession;
+  const profession =
+    typeof professionValue === "string" ? professionValue.trim() : "";
+  const professionLabel = profession
+    ? `${profession[0].toUpperCase()}${profession.slice(1)}`
+    : "";
+
   return (
     <article className={styles.card}>
       <Link
         className={styles.cardOpen}
-        href={`/photographers/${encodeURIComponent(person._id)}`}
+        href={`/photographers/profile?id=${encodeURIComponent(person._id)}`}
         aria-label={`View ${person.name}'s photographer profile`}
       >
         <div className={styles.photo}>
@@ -24,8 +33,14 @@ export default function PhotographerCard({ person }) {
         />
         </div>
         <div className={styles.cardInfo}>
-          <h3>{person.name}</h3>
+          <h3>
+            {person.name}
+            <span className={styles.verifiedBadge}>✓ Verified</span>
+          </h3>
           <p className={styles.location}>● &nbsp;{person.location}</p>
+          {professionLabel && (
+            <p className={styles.profession}>Profession: {professionLabel}</p>
+          )}
           {person.minimumDailyFees !== null &&
             person.minimumDailyFees !== undefined &&
             person.minimumDailyFees !== "" && (
@@ -37,7 +52,7 @@ export default function PhotographerCard({ person }) {
             {person.tags.length ? (
               person.tags.slice(0, 3).map((tag) => <span key={tag}>{tag}</span>)
             ) : (
-              <span>No specialties listed</span>
+              <span>No Gears listed</span>
             )}
           </div>
           <div

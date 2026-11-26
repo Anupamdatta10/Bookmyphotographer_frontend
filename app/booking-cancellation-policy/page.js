@@ -1,12 +1,374 @@
-import Link from "next/link";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import styles from "./page.module.css";
 
 export const metadata = {
   title: "Booking & Cancellation Policy | BookMyFotographer",
-  description: "Booking and cancellation policy for BookMyFotographer marketplace.",
+  description:
+    "Booking and cancellation policy for BookMyFotographer marketplace.",
 };
+
+const policySections = [
+  {
+    title: "1. Purpose of This Policy",
+    content: (
+      <>
+        <p>
+          BookMyFotographer connects customers with independent freelance
+          photographers and videographers (each a &quot;Professional&quot;).
+          This policy explains how bookings, platform payments, cancellations
+          and related refunds are handled. It should be read together with
+          BookMyFotographer Terms &amp; Conditions.
+        </p>
+        <p>
+          The customer and Professional agree the photography or videography
+          services directly. BookMyFotographer separately administers the 25%
+          booking advance and collects the applicable Customer Processing Fee
+          and Photographer Processing Fee described in this policy.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: "2. Before You Request a Booking",
+    content: (
+      <>
+        <p>
+          Customers should review a Professional&apos;s profile, portfolio,
+          service area, indicative pricing and availability. Profile and
+          calendar information is indicative and should be confirmed directly
+          with the Professional.
+        </p>
+        <p>
+          Before confirming a booking, the customer and Professional should
+          agree on:
+        </p>
+        <ul>
+          <li>
+            Event type, date, venue, start and end times, and expected duration.
+          </li>
+          <li>
+            Coverage requirements, number of photographers or videographers and
+            any special requests.
+          </li>
+          <li>
+            Deliverables, including edited photographs, raw files, videos,
+            albums or other outputs.
+          </li>
+          <li>
+            Editing requirements, delivery method and expected delivery
+            timeline.
+          </li>
+          <li>
+            The Professional&apos;s total fee, package or hourly rate, and any
+            travel, additional or applicable tax charges.
+          </li>
+          <li>
+            Any other agreed arrangements, including postponement, rescheduling,
+            overtime and changes.
+          </li>
+        </ul>
+      </>
+    ),
+  },
+  {
+    title: "3. When Is a Booking Confirmed?",
+    content: (
+      <>
+        <p>
+          A booking is officially confirmed only after the customer and
+          Professional have agreed the material assignment details, the
+          Professional has expressly accepted the assignment, and
+          BookMyFotographer has received the customer&apos;s 25% advance, the
+          Customer Processing Fee and the Photographer Processing Fee. A
+          request, tentative availability indication or preliminary discussion
+          is not a confirmed booking.
+        </p>
+        <p>The booking process is as follows:</p>
+        <ol>
+          <li>
+            The customer and Professional first agree the event date, venue,
+            timings, scope, deliverables and the Professional&apos;s total fee,
+            and the Professional confirms availability and willingness to accept
+            the assignment.
+          </li>
+          <li>
+            Before confirmation, the customer pays BookMyFotographer the 25%
+            advance and the applicable Customer Processing Fee.
+          </li>
+          <li>
+            The Professional then accepts the assignment and pays the applicable
+            Photographer Processing Fee before the booking is confirmed.
+          </li>
+          <li>
+            Once the Professional&apos;s acceptance and all three payments (the
+            25% advance and both Processing Fees) have been received,
+            BookMyFotographer confirms the booking and shares the parties&apos;
+            direct contact details for coordination.
+          </li>
+        </ol>
+        <p>
+          Direct contact details will not be shared before official booking
+          confirmation, except where disclosure is required by law or is
+          otherwise expressly agreed by BookMyFotographer.
+        </p>
+        <p>
+          Professionals should accept a booking only when they reasonably expect
+          to be available and able to perform the assignment.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: "4. Processing Fees and Advance Payment",
+    content: (
+      <>
+        <p>
+          Before a booking is confirmed, the customer must pay BookMyFotographer
+          an advance equal to 25% of the Professional&apos;s total agreed fee.
+          This advance is separate from the Customer Processing Fee. The advance
+          will be held by BookMyFotographer and handled after confirmation in
+          accordance with this policy.
+        </p>
+        <p>
+          BookMyFotographer will hold the advance until the Professional
+          completes the assigned work at the event. We will then contact the
+          customer by telephone. Once the customer confirms that the
+          Professional attended and completed the assigned work, we will release
+          the full 25% advance directly to the Professional.
+        </p>
+        <p>
+          If the Professional declines or is unable to accept the assignment
+          after the customer has paid but before the booking is confirmed,
+          BookMyFotographer will refund the customer&apos;s full 25% advance and
+          Customer Processing Fee. If the Professional cancels a confirmed
+          booking or does not attend on the event day, the customer will also
+          receive a full refund of the 25% advance and Customer Processing Fee.
+        </p>
+        <p>
+          Before the booking is confirmed, the customer must pay a nominal,
+          non-refundable Customer Processing Fee. This fee covers platform
+          administration, booking processing and coordination. If the
+          Professional declines the assignment after the customer has paid, or
+          subsequently cancels or does not attend, the Customer Processing Fee
+          will be refunded in full. The fee is separate from the 25% advance and
+          is not cancellation compensation, subject to applicable law.
+        </p>
+        <p>
+          After accepting the assignment and before the booking is confirmed,
+          the Professional must pay a nominal, non-refundable Photographer
+          Processing Fee. This fee covers platform administration, booking
+          processing and coordination and is separate from the
+          Professional&apos;s service fee and the customer&apos;s advance. It is
+          <strong> not a refundable security deposit or caution money.</strong>
+        </p>
+        <p>
+          The applicable Customer Processing Fee and Photographer Processing
+          Fee, payment methods and instructions will be communicated upfront
+          before payment is due. Both Processing Fees and the customer&apos;s
+          25% advance must be received before official booking confirmation.
+          Users should retain their payment acknowledgements.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: "5. Customer Cancellation or Rescheduling",
+    content: (
+      <>
+        <p>
+          A customer who wishes to cancel or reschedule must notify the
+          Professional and BookMyFotographer as soon as possible. Any revised
+          event date or material change must be accepted by both the customer
+          and Professional.
+        </p>
+        <p>
+          BookMyFotographer should be promptly notified by telephone or email,
+          so that the booking record and Professional&apos;s availability can be
+          updated.
+        </p>
+        <p>
+          If the customer cancels a confirmed booking after paying the advance,
+          cancellation compensation may be deducted from the advance and paid to
+          the Professional, with the remaining balance refunded to the customer.
+          The indicative maximum compensation schedule is:
+          <em>
+            {" "}
+            more than 30 days before the event, up to 10% of the advance; 15-30
+            days before the event, up to 25% of the advance; 7-15 days before
+            the event, up to 50% of the advance; 3-7 days before the event, up
+            to 75% of the advance; and less than 3 days before the event, up to
+            100% of the advance.
+          </em>{" "}
+          The percentage is applied to the advance payment made by the customer,
+          not to the Professional&apos;s total fee. The amount must be
+          reasonable in the circumstances and may take account of the notice
+          given, preparation or costs already incurred, the time reserved and
+          the Professional&apos;s reasonable opportunity to obtain another
+          assignment. BookMyFotographer may reduce or waive compensation where
+          appropriate. Any remaining balance will be refunded promptly to the
+          customer. The Customer Processing Fee remains non-refundable where the
+          booking-processing service has been provided, subject to applicable
+          law.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: "6. Professional's Cancellation or Unavailability",
+    content: (
+      <>
+        <p>
+          A Professional who cannot fulfil a confirmed booking must notify both
+          the customer and BookMyFotographer immediately.
+        </p>
+        <p>
+          The Professional must contact BookMyFotographer by telephone so that
+          the booking record and availability calendar can be updated promptly.
+        </p>
+        <p>
+          At the customer&apos;s request, BookMyFotographer will make reasonable
+          efforts to help identify an available alternative Professional.
+          However, a replacement cannot be guaranteed.
+        </p>
+        <p>
+          If the Professional cancels or does not attend on the event day, the
+          customer will receive a full refund of the 25% advance and the
+          Customer Processing Fee. If the Professional sends a substitute on
+          their behalf, the 25% advance will be refunded to the customer, and
+          the Professional will not receive that amount from BookMyFotographer.
+          In this case, the Customer Processing Fee will not be refunded to the
+          customer.
+        </p>
+        <p>
+          The Photographer Processing Fee is a separate fee for
+          booking-processing work already undertaken and is not a customer
+          charge. Where cancellation results from a genuine emergency,
+          circumstances beyond the Professional&apos;s reasonable control, or
+          another reason not attributable to the Professional&apos;s fault,
+          BookMyFotographer will review the circumstances fairly before deciding
+          whether any platform action or further contractual consequence is
+          appropriate. No automatic forfeiture of any fee applies here.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: "7. Calendar and Availability Updates",
+    content: (
+      <>
+        <p>
+          The Platform may mark a Professional as unavailable when a booking is
+          recorded. Calendar information is provided for convenience and may not
+          always reflect real-time availability.
+        </p>
+        <p>
+          Professionals must keep their availability information current. Both
+          parties should notify BookMyFotographer promptly by telephone if a
+          booking is cancelled or changed.
+        </p>
+        <p>
+          Customers should confirm availability directly with the Professional
+          before relying on a calendar entry. Professionals are responsible for
+          avoiding double bookings.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: "8. Changes to Event Requirements",
+    content: (
+      <>
+        <p>
+          Any material change to the event date, time, venue, duration, scope or
+          deliverables must be discussed and accepted by both parties. A change
+          may affect the fee or availability and is not effective until both
+          parties agree.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: "9. Late Arrival, Overtime and Deliverables",
+    content: (
+      <>
+        <p>
+          The customer and Professional should agree in advance how late
+          arrival, overtime, travel, breaks, extra editing, additional
+          deliverables and delivery extensions will be handled.
+        </p>
+        <p>
+          Any revised arrangement should be communicated promptly and recorded
+          where practicable. BookMyFotographer does not determine the
+          Professional&apos;s service fee or the scope of the direct service
+          agreement.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: "10. Feedback and Complaints",
+    content: (
+      <>
+        <p>
+          After an assignment, both parties may share honest feedback. Customer
+          reviews may contribute to a Professional&apos;s displayed rating on
+          our website, subject to moderation and platform standards.
+        </p>
+        <p>
+          Report misconduct, harassment, fraud or safety concerns to{" "}
+          <a href="mailto:email@bookmyfotographer.co.in">
+            email@bookmyfotographer.co.in
+          </a>{" "}
+          or <a href="tel:+918334934147">+91 8334934147</a> as soon as possible.
+          We may review reports and take appropriate platform action but cannot
+          always guarantee a particular outcome.
+        </p>
+        <p>
+          If anyone is in immediate danger or a crime may have occurred, contact
+          the appropriate emergency service or law-enforcement authority first.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: "11. Our Role and Important Notice",
+    content: (
+      <>
+        <p>
+          BookMyFotographer connects customers and independent Professionals,
+          administers the customer advance and the separate Processing Fees, and
+          shares direct contact details only after a booking has been officially
+          confirmed in accordance with this policy.
+        </p>
+        <p>
+          We may assist with booking-related communication and attempts to
+          identify a replacement. Except for the specific payment and refund
+          commitments stated here, we do not guarantee a Professional&apos;s
+          performance, a replacement or a particular dispute outcome.
+        </p>
+        <p>
+          Customers and Professionals must not deliberately bypass
+          BookMyFotographer in relation to an assignment introduced or confirmed
+          through the Platform by falsely reporting it as cancelled, concealing
+          that it will proceed, or privately arranging the same assignment to
+          avoid applicable Processing Fees or booking obligations. If a
+          confirmed assignment is moved off-platform by agreement, applicable
+          fees already earned for booking-processing work remain payable,
+          subject to applicable law. We may contact both parties independently,
+          request relevant information and review booking and payment records
+          before updating a booking as cancelled. Any claim for additional
+          compensation must be reasonable, supported by the circumstances and
+          permitted by law.
+        </p>
+        <p>
+          Nothing in this policy limits any right or remedy that cannot lawfully
+          be excluded under applicable Indian law.
+        </p>
+      </>
+    ),
+  },
+];
 
 export default function BookingCancellationPolicyPage() {
   return (
@@ -24,293 +386,61 @@ export default function BookingCancellationPolicyPage() {
 
       <section className={styles.content}>
         <p className={styles.introduction}>
-          BookMyFotographer helps customers discover and connect with
-          independent freelance photographers and videographers. This policy
-          explains the recommended booking, confirmation, availability,
-          cancellation and feedback process on the Platform.
+          Customer and Professional booking procedures
         </p>
         <p>
-          BookMyFotographer is a connecting platform. The service agreement,
-          including fees and cancellation consequences, is directly between the
-          customer and the selected Professional.
+          This policy explains the payment-handling process administered by
+          BookMyFotographer. It should be read with the Terms &amp; Conditions.
+          The customer and Professional must agree the service scope, total
+          professional fee, deliverables and any other engagement terms before
+          confirming a booking.
         </p>
 
-        <article>
-          <h2>1. Purpose of This Policy</h2>
-          <p>
-            BookMyFotographer helps customers discover and connect with
-            independent freelance photographers and videographers. This policy
-            explains the recommended booking, confirmation, availability,
-            cancellation and feedback process on the Platform.
-          </p>
-          <p>
-            BookMyFotographer is a connecting platform. The service agreement,
-            including fees and cancellation consequences, is directly between
-            the customer and the selected Professional.
-          </p>
-        </article>
+        {policySections.map((section) => (
+          <article key={section.title}>
+            <h2>{section.title}</h2>
+            {section.content}
+          </article>
+        ))}
 
         <article>
-          <h2>2. Before You Request a Booking</h2>
+          <h2>12. Contact Us</h2>
           <p>
-            Customers should review the Professional&rsquo;s profile, portfolio,
-            service area, indicative pricing, ratings and availability
-            information. A profile or calendar entry is a guide and does not by
-            itself guarantee availability.
+            For booking updates, cancellations, complaints or platform
+            assistance, contact:
+          </p>
+          <p>BookMyFotographer | West Bengal, India</p>
+          <p>
+            Website:{" "}
+            <a
+              href="https://bookmyfotographer.co.in"
+              target="_blank"
+              rel="noreferrer"
+            >
+              bookmyfotographer.co.in
+            </a>
           </p>
           <p>
-            Before confirming, discuss and agree directly with the
-            Professional:
-          </p>
-          <ul>
-            <li>
-              Event type, date, start and end time, location and expected
-              duration.
-            </li>
-            <li>
-              Type of coverage, number of photographers or videographers and
-              any special requirements.
-            </li>
-            <li>
-              Deliverables, such as edited photographs, raw files, video
-              format, album or other outputs.
-            </li>
-            <li>
-              Editing, delivery method and expected delivery timeline.
-            </li>
-            <li>
-              Total fee, hourly rate or package, travel or additional charges,
-              taxes if applicable, advance and balance payment.
-            </li>
-            <li>
-              Cancellation, postponement, rescheduling, overtime and refund
-              terms.
-            </li>
-          </ul>
-        </article>
-
-        <article>
-          <h2>3. When Is a Booking Confirmed?</h2>
-          <p>
-            A booking should be treated as confirmed only when the customer and
-            Professional have mutually accepted the assignment and agreed its
-            material terms, preferably in writing through a message, email or
-            booking confirmation record by any means.
+            Email:{" "}
+            <a href="mailto:email@bookmyfotographer.co.in">
+              email@bookmyfotographer.co.in
+            </a>
           </p>
           <p>
-            Customers should retain the Professional&rsquo;s confirmation and the
-            agreed details. Professionals should ensure that they can fulfil
-            the assignment before accepting it.
-          </p>
-        </article>
-
-        <article>
-          <h2>4. Direct Payments and Receipts</h2>
-          <p>
-            All payments are made directly between the customer and
-            Professional; BookMyFotographer does not get involved here. The
-            parties must agree who will receive payment, the amount, due dates,
-            advance, balance, payment method and any refund or cancellation
-            charge. The Professional should provide appropriate acknowledgement
-            for the amounts received.
+            Phone: <a href="tel:+919804060342">+91 9804060342</a>
           </p>
           <p>
-            BookMyFotographer does not collect, hold, transfer, refund or
-            guarantee payments made directly between users and cannot decide a
-            payment dispute arising from their private agreement.
-          </p>
-        </article>
-
-        <article>
-          <h2>5. Customer Cancellation or Rescheduling</h2>
-          <p>
-            If a customer needs to cancel or reschedule, they should contact
-            the Professional directly as soon as possible and follow the
-            cancellation or rescheduling terms agreed before booking.
-          </p>
-          <p>
-            The customer should also notify BookMyFotographer by direct phone
-            calling so that the Professional&rsquo;s availability calendar can be
-            corrected from back-end wherever it is necessary.
-          </p>
-          <p>
-            Any advance refund, cancellation charge, rescheduling fee or other
-            financial adjustment must be resolved directly between the customer
-            and Professional under their mutual agreement.
-          </p>
-        </article>
-
-        <article>
-          <h2>6. Professional Cancellation or Unavailability</h2>
-          <p>
-            If a Professional cannot attend a confirmed assignment, they should
-            inform the customer immediately, explain the situation where
-            appropriate, and discuss any next steps under their agreement.
-          </p>
-          <p>
-            The Professional should also call BookMyFotographer at [insert
-            official phone number] so that the Platform can update the
-            availability calendar and booking information.
-          </p>
-          <p>
-            The customer may contact BookMyFotographer to request assistance in
-            finding an alternative Professional. We will make reasonable
-            efforts to help identify an available replacement, but a
-            replacement is not guaranteed, particularly at short notice or
-            during peak dates.
-          </p>
-          <p>
-            Any refund or other financial settlement remains a matter between
-            the customer and Professional under their direct agreement.
-            BookMyFotographer does not promise to fund a replacement, reimburse
-            a customer or compensate either party for a cancellation.
-          </p>
-        </article>
-
-        <article>
-          <h2>7. Calendar and Availability Updates</h2>
-          <p>
-            The Platform may automatically block or mark a Professional as
-            unavailable when a booking is recorded. This is intended to reduce
-            overlapping bookings but is not a substitute for direct
-            confirmation.
-          </p>
-          <p>
-            Professionals should keep their calendars updated through their
-            profiles. If either party cancels or changes a booking, both
-            parties should notify BookMyFotographer by phone so the calendar
-            can be manually corrected where required.
-          </p>
-          <p>
-            Until an update is visible, users should confirm availability
-            directly with the Professional. Professionals remain responsible
-            for managing their own schedules and avoiding double bookings.
-          </p>
-        </article>
-
-        <article>
-          <h2>8. Changes to Event Requirements</h2>
-          <p>
-            Any material change to the event date, time, location, duration,
-            scope, deliverables or number of professionals should be discussed
-            and accepted by both parties in writing.
-          </p>
-          <p>
-            A change may affect the agreed fee or availability. Neither party
-            should assume that a change has been accepted until the other party
-            confirms it.
-          </p>
-        </article>
-
-        <article>
-          <h2>9. Late Arrival, Overtime and Deliverables</h2>
-          <p>
-            The customer and Professional should agree in advance how delays,
-            overtime, travel, breaks, additional editing, extra deliverables
-            and delivery extensions will be handled.
-          </p>
-          <p>
-            If an issue arises on the event day, the parties should
-            communicate promptly and keep a written record of any revised
-            arrangement. BookMyFotographer does not determine the professional
-            fee or the scope of the direct service agreement.
-          </p>
-        </article>
-
-        <article>
-          <h2>10. Feedback and Complaints</h2>
-          <p>
-            After the assignment, both parties are encouraged to share honest
-            feedback with BookMyFotographer. Customer reviews may contribute to
-                        a Professional&rsquo;s displayed rating, subject to moderation and
-                        the Platform&rsquo;s review standards.
-          </p>
-          <p>
-            If misconduct, harassment, safety concerns, fraud or another
-            serious incident occurs, report it to [insert support email] or
-            [insert phone number] as soon as possible. We may review the report
-            and take appropriate platform action, but we cannot guarantee that
-            we can resolve every dispute.
-          </p>
-          <p>
-            If anyone is in immediate danger or a crime may have occurred,
-            contact the appropriate emergency service or law-enforcement
-            authority first.
-          </p>
-        </article>
-
-        <article>
-          <h2>11. Practical Checklist</h2>
-          <ul>
-            <li>
-              Confirm the date, time, location and duration directly with the
-              Professional.
-            </li>
-            <li>
-              Agree the complete scope, deliverables and delivery timeline.
-            </li>
-            <li>
-              Agree all fees, advances, balance payments and cancellation terms
-              in writing.
-            </li>
-            <li>Keep confirmation messages and payment receipts.</li>
-            <li>
-              Notify the Professional and BookMyFotographer promptly if a
-              booking changes or is cancelled.
-            </li>
-            <li>
-              After the assignment, share feedback and report serious concerns
-              promptly.
-            </li>
-          </ul>
-        </article>
-
-        <article>
-          <h2>12. Our Role and Important Notice</h2>
-          <p>
-            BookMyFotographer provides the platform through which customers
-            and independent Professionals can find and connect with one
-            another. The actual photography or videography service is provided
-            under a direct agreement between those parties.
-          </p>
-          <p>
-            We will make reasonable efforts to assist with platform-related
-            communication and, where possible, identify an alternative
-            Professional following a cancellation. We do not guarantee service
-            delivery, a replacement, a refund or a particular dispute outcome.
-          </p>
-          <p>
-            Nothing in this policy limits any right or remedy that a customer
-            or Professional has under applicable Indian law.
-          </p>
-        </article>
-
-        <article>
-          <h2>13. Contact Us</h2>
-          <p>
-            For booking-calendar updates, cancellation notifications,
-            replacement requests or platform assistance, contact:
-          </p>
-          <p>
-            BookMyFotographer | West Bengal, India
-          </p>
-          <p>
-            Website: <strong>bookmyfotographer.co.in</strong>
-          </p>
-          <p>
-            Email: <strong>email@bookmyfotographer.co.in</strong>
-          </p>
-          <p>Phone: <strong>+91 9804060342</strong></p>
-          <p>
-            Grievance contact: Anit Dey, +91 8334934147
+            Grievance contact: Anit Dey,{" "}
+            <a href="tel:+918334934147">+91 8334934147</a>
           </p>
           <p>
             <strong>
-              BookMyFotographer — Connecting Customers. Empowering Creators.
+              BookMyFotographer — Your Moments. Their Creativity. One Platform.
             </strong>
           </p>
         </article>
       </section>
+
       <Footer />
     </main>
   );

@@ -17,6 +17,7 @@ export default function Footer() {
             alt="BookMyFotographer logo"
             width={2182}
             height={240}
+            loading="eager"
             unoptimized
           />
         </Link>

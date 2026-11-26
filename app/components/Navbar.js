@@ -14,7 +14,7 @@ const links = [
   ["about", "About", "/about"],
   ["contact", "Contact Us", "/contact"],
   ["terms-and-conditions", "Terms & Conditions", "/terms-and-conditions"],
-  ["privacy-policy", "Privacy Policy", "/privacy-policy"],
+  // ["privacy-policy", "Privacy Policy", "/privacy-policy"],
 ];
 
 export default function Navbar({ current = "home", hideAuthActions = false, fullWidth = false }) {
@@ -87,6 +87,7 @@ export default function Navbar({ current = "home", hideAuthActions = false, full
           alt="BookMyFotographer logo"
           width={1520}
           height={860}
+          loading="eager"
         />
 
       </Link>
