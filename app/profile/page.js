@@ -357,6 +357,7 @@ export default function ProfilePage() {
     "district",
     "city",
     "address1",
+    "address2",
     "pincode",
     "proffession",
     "specialties",
@@ -374,6 +375,7 @@ export default function ProfilePage() {
     "district",
     "city",
     "address1",
+    "address2",
     "pincode",
   ]);
   const partnerEditableFields = new Set([
@@ -416,7 +418,31 @@ export default function ProfilePage() {
           return result;
         })
         .then((user) => {
-          if (isCurrent) setProfile(user);
+          if (isCurrent) {
+            setProfile(user);
+            if (new URLSearchParams(window.location.search).get("setup") === "1") {
+              const districtOption = getMatchingLocationOption(WEST_BENGAL_DISTRICTS, user.district);
+              const districtValue = districtOption?.value ?? normalizeLocationValue(user.district);
+              const cityOption = getMatchingLocationOption(WEST_BENGAL_CITIES_BY_DISTRICT[districtValue] ?? [], user.city);
+              const profession = Array.isArray(user.proffession) ? user.proffession : [user.proffession];
+              setSelectedDistrict(districtValue);
+              setSelectedCity(cityOption?.value ?? normalizeLocationValue(user.city));
+              setSelectedProfession(
+                profession.includes("photographer") && profession.includes("videographer")
+                  ? "both"
+                  : profession[0] === "photographer and videographer"
+                    ? "both"
+                    : profession[0] ?? "",
+              );
+              const specialties = Array.isArray(user.specialties)
+                ? user.specialties
+                : user.specialties ? String(user.specialties).split(",") : [];
+              setSpecialtyTags([...new Set(specialties.map((tag) => String(tag).trim()).filter(Boolean))].map((label) => ({ label, value: label })));
+              const birthDate = user.dob ? String(user.dob).slice(0, 10) : "";
+              setDobValue(birthDate);
+              setIsEditing(true);
+            }
+          }
         })
         .catch((error) => {
           if (isCurrent) {

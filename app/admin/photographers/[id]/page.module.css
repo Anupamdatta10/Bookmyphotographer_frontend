@@ -34,6 +34,31 @@
 .layout { display: grid; grid-template-columns: minmax(0, 2fr) minmax(250px, .75fr); gap: 18px; }
 .card { padding: 20px; border: 1px solid #dfe8ea; border-radius: 7px; background: #fff; }
 .card h2 { margin: 0 0 16px; color: #203c4b; font-size: 16px; }
+.detailsHeading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.detailsHeading h2 { margin-bottom: 16px; }
+.editButton, .saveButton, .cancelButton { padding: 9px 13px; border: 0; border-radius: 5px; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
+.editButton, .saveButton { background: #287b72; color: #fff; }
+.cancelButton { border: 1px solid #d4e1e4; background: #fff; color: #315966; }
+.editButton:disabled, .saveButton:disabled, .cancelButton:disabled { cursor: wait; opacity: .65; }
+.editField { display: grid; gap: 6px; min-width: 0; padding: 11px 10px 11px 0; border-bottom: 1px solid #edf2f2; color: #879aa2; font-size: 10px; }
+.editField:nth-child(even) { padding-left: 14px; }
+.editField input, .editField textarea { width: 100%; min-width: 0; padding: 9px; border: 1px solid #d4e1e4; border-radius: 5px; color: #405967; font: inherit; font-size: 12px; }
+.editField textarea { resize: vertical; }
+.tagInput { display: flex; min-width: 0; min-height: 40px; flex-wrap: wrap; align-items: center; gap: 6px; padding: 5px 8px; border: 1px solid #d4e1e4; border-radius: 5px; background: #fff; }
+.tagList { display: flex; flex-wrap: wrap; gap: 5px; margin: 0; padding: 0; list-style: none; }
+.tagListItem { display: flex; }
+.tag { display: inline-flex; align-items: center; gap: 6px; padding: 5px 8px; border: 1px solid #b9ded4; border-radius: 4px; background: #eff8f5; color: #176b59; font: inherit; font-size: 11px; }
+.tagName { overflow-wrap: anywhere; }
+.tagRemove { padding: 0; border: 0; background: transparent; color: inherit; font-size: 16px; line-height: 1; cursor: pointer; }
+.tagTextInput { width: 100%; min-width: 0; padding: 5px 2px; border: 0; background: transparent; color: #263b4a; font: inherit; font-size: 12px; outline: 0; }
+.editActions { display: flex; justify-content: flex-end; gap: 8px; padding-top: 16px; }
+.saveMessage, .saveError { margin: 0 0 12px; font-size: 12px; }
+.saveMessage { color: #287b72; }
+.saveError { color: #b42318; }
+.photoForm { display: grid; gap: 9px; margin-top: 14px; }
+.photoForm label { display: grid; gap: 6px; color: #607680; font-size: 10px; }
+.photoForm input[type="file"] { width: 100%; min-width: 0; padding: 8px; border: 1px solid #d4e1e4; border-radius: 5px; color: #405967; font: inherit; font-size: 11px; }
+.photoForm .saveButton { justify-self: start; }
 .detailGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid #edf2f2; }
 .detailItem { display: grid; gap: 5px; min-width: 0; padding: 13px 10px 13px 0; border-bottom: 1px solid #edf2f2; }
 .detailItem:nth-child(odd) { border-right: 1px solid #edf2f2; }
@@ -64,5 +89,6 @@
   .detailGrid { grid-template-columns: 1fr; }
   .detailItem:nth-child(odd) { border-right: 0; }
   .detailItem:nth-child(even) { padding-left: 0; }
+  .editField:nth-child(even) { padding-left: 0; }
   .mediaGrid { grid-template-columns: 1fr; }
 }

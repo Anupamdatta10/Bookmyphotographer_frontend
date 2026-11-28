@@ -3,10 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import Swal from "sweetalert2";
 import styles from "../auth.module.css";
 import Navbar from "../components/Navbar";
-import { UserRole } from "../constants/common";
 
 const CODE_LENGTH = 6;
 const RESEND_BASE_DELAY_SECONDS = 30;
@@ -127,21 +125,42 @@ export default function OtpPage() {
         return;
       }
 
+      const signupPayload = JSON.parse(
+        window.sessionStorage.getItem("signupPayload") || "{}",
+      );
+      const loginResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/users/login`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: signupPayload.email || email,
+            password: signupPayload.password,
+          }),
+        },
+      );
+      const loginResult = await loginResponse.json().catch(() => null);
+      if (!loginResponse.ok || !loginResult?._id || !loginResult?.accessToken) {
+        setMessage(loginResult?.message || "Email verified, but automatic sign-in failed. Please sign in to continue.");
+        setIsError(true);
+        return;
+      }
+
+      window.localStorage.setItem("photoConnectUser", JSON.stringify({
+        userId: String(loginResult._id),
+        name: loginResult.name,
+        profileImageUrl: loginResult.profileImageUrl,
+        type: loginResult.type,
+        accessToken: loginResult.accessToken,
+        accountCollection: loginResult.accountCollection,
+        expiresAt: Date.now() + 10 * 24 * 60 * 60 * 1000,
+      }));
       window.sessionStorage.removeItem("otpResendAttempts");
       window.sessionStorage.removeItem("otpResendAvailableAt");
-      
-            // Show success modal and redirect to signin on OK click
-            await Swal.fire({
-              icon: "success",
-              title: "Email Verified!",
-              text: "Your email has been successfully verified.",
-              confirmButtonText: "OK",
-              confirmButtonColor: "#3085d6",
-            });
-            if(result?.data.type==UserRole.PARTNER)
-              router.push("/signin");
-            else
-              router.push('/profile-update')
+      window.sessionStorage.removeItem("signupEmail");
+      window.sessionStorage.removeItem("signupPhone");
+      window.sessionStorage.removeItem("signupPayload");
+      router.replace("/profile?setup=1");
     } catch {
       setMessage("Could not connect to the server. Please try again.");
       setIsError(true)

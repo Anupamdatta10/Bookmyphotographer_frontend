@@ -48,6 +48,7 @@ export default function ProfileDetailsPage() {
       ["district", "district"],
       ["city", "city"],
       ["address1", "address 1"],
+      ["address2", "address 2"],
       ["minimumDailyFees", "minimum daily fees"],
       ["file", "profile image"],
       ["identityProof", "identity proof"],
@@ -317,12 +318,19 @@ export default function ProfileDetailsPage() {
             </label>
 
             <label className={styles.field}>
-              Address 2
+              <div>
+                Address 2 <span aria-hidden="true">*</span>
+              </div>
               <input
                 name="address2"
                 type="text"
+                required
                 placeholder="Apartment, suite, etc."
+                aria-invalid={Boolean(fieldErrors.address2)}
+                aria-describedby={fieldErrors.address2 ? "address2-error" : undefined}
+                onChange={() => setFieldErrors((errors) => ({ ...errors, address2: "" }))}
               />
+              {fieldErrors.address2 && <span className={styles.fieldError} id="address2-error">{fieldErrors.address2}</span>}
             </label>
 
             <label className={styles.field}>

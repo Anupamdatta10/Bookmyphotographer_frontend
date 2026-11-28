@@ -55,6 +55,113 @@ function mapPhotographer(user) {
   };
 }
 
+function dateKey(year, month, day) {
+  return `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function AvailabilityDatePicker({ value, onChange }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [visibleMonth, setVisibleMonth] = useState(() => {
+    const selected = value ? new Date(`${value}T00:00:00`) : new Date();
+    return new Date(selected.getFullYear(), selected.getMonth(), 1);
+  });
+  const pickerRef = useRef(null);
+  const year = visibleMonth.getFullYear();
+  const month = visibleMonth.getMonth();
+  const today = new Date();
+  const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
+  const days = [
+    ...Array(new Date(year, month, 1).getDay()).fill(null),
+    ...Array.from({ length: new Date(year, month + 1, 0).getDate() }, (_, index) => index + 1),
+  ];
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    function closeOnOutsideClick(event) {
+      if (!pickerRef.current?.contains(event.target)) setIsOpen(false);
+    }
+    document.addEventListener("mousedown", closeOnOutsideClick);
+    return () => document.removeEventListener("mousedown", closeOnOutsideClick);
+  }, [isOpen]);
+
+  const selectedLabel = value
+    ? new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })
+    : "Any event date";
+
+  return (
+    <div className={styles.datePicker} ref={pickerRef}>
+      <button
+        className={styles.datePickerTrigger}
+        type="button"
+        aria-haspopup="dialog"
+        aria-expanded={isOpen}
+        onClick={() => {
+          if (value) {
+            const selected = new Date(`${value}T00:00:00`);
+            if (!Number.isNaN(selected.getTime())) setVisibleMonth(new Date(selected.getFullYear(), selected.getMonth(), 1));
+          }
+          setIsOpen((open) => !open);
+        }}
+      >
+        <span className={styles.datePickerIcon} aria-hidden="true">▦</span>
+        <span>{selectedLabel}</span>
+        <span className={styles.datePickerChevron} aria-hidden="true">⌄</span>
+      </button>
+      {isOpen && (
+        <div className={styles.calendarPopup} role="dialog" aria-label="Choose event date">
+          <div className={styles.calendarHeader}>
+            <button type="button" aria-label="Previous month" onClick={() => setVisibleMonth(new Date(year, month - 1, 1))}>‹</button>
+            <div className={styles.calendarMonthYear}>
+              <select
+                aria-label="Choose month"
+                value={month}
+                onChange={(event) => setVisibleMonth(new Date(year, Number(event.target.value), 1))}
+              >
+                {Array.from({ length: 12 }, (_, index) => (
+                  <option key={index} value={index}>
+                    {new Date(2020, index, 1).toLocaleDateString(undefined, { month: "long" })}
+                  </option>
+                ))}
+              </select>
+              <select
+                aria-label="Choose year"
+                value={year}
+                onChange={(event) => setVisibleMonth(new Date(Number(event.target.value), month, 1))}
+              >
+                {Array.from({ length: 11 }, (_, index) => today.getFullYear() + index).map((optionYear) => (
+                  <option key={optionYear} value={optionYear}>{optionYear}</option>
+                ))}
+              </select>
+            </div>
+            <button type="button" aria-label="Next month" onClick={() => setVisibleMonth(new Date(year, month + 1, 1))}>›</button>
+          </div>
+          <div className={styles.calendarGrid}>
+            {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => <span className={styles.calendarWeekday} key={day}>{day}</span>)}
+            {days.map((day, index) => {
+              if (!day) return <span key={`empty-${index}`} />;
+              const key = dateKey(year, month, day);
+              const isPast = key < todayKey;
+              return (
+                <button
+                  className={`${styles.calendarDay} ${value === key ? styles.calendarDaySelected : ""}`}
+                  key={key}
+                  type="button"
+                  disabled={isPast}
+                  aria-pressed={value === key}
+                  onClick={() => { onChange(key); setIsOpen(false); }}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+          <button className={styles.calendarClear} type="button" onClick={() => { onChange(""); setIsOpen(false); }}>Clear date</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Home() {
   const [slide, setSlide] = useState(0);
   const [partners, setPartners] = useState([]);
@@ -77,6 +184,7 @@ export default function Home() {
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedDailyFeeRange, setSelectedDailyFeeRange] = useState("");
+  const [selectedAvailabilityDate, setSelectedAvailabilityDate] = useState("");
   const [priceRangeMax, setPriceRangeMax] = useState(0);
   const [priceRangeLoaded, setPriceRangeLoaded] = useState(false);
   const [priceRangeError, setPriceRangeError] = useState("");
@@ -313,6 +421,7 @@ export default function Home() {
       }
       if (selectedCity) params.set("city", selectedCity);
       addDailyFeeRangeParams(params, selectedDailyFeeRange);
+      if (selectedAvailabilityDate) params.set("availableDate", selectedAvailabilityDate);
 
       try {
         const response = await fetch(
@@ -357,7 +466,7 @@ export default function Home() {
       clearTimeout(timeoutId);
       controller?.abort();
     };
-  }, [searchTerm, selectedDistrict, selectedCity, selectedDailyFeeRange]);
+  }, [searchTerm, selectedDistrict, selectedCity, selectedDailyFeeRange, selectedAvailabilityDate]);
 
   const loadMorePhotographers = useCallback(async () => {
     if (!photographersHasMore || photographersLoadingRef.current) return;
@@ -379,6 +488,7 @@ export default function Home() {
     }
     if (selectedCity) params.set("city", selectedCity);
     addDailyFeeRangeParams(params, selectedDailyFeeRange);
+    if (selectedAvailabilityDate) params.set("availableDate", selectedAvailabilityDate);
 
     try {
       const response = await fetch(`${BACKEND_URL}/api/photographers?${params.toString()}`);
@@ -412,6 +522,7 @@ export default function Home() {
     selectedCity,
     selectedDistrict,
     selectedDailyFeeRange,
+    selectedAvailabilityDate,
   ]);
 
   function handleHeroPointerDown(event) {
@@ -460,6 +571,7 @@ export default function Home() {
     setSelectedDistrict("");
     setSelectedCity("");
     setSelectedDailyFeeRange("");
+    setSelectedAvailabilityDate("");
     setPriceBounds({ min: PRICE_RANGE_MIN, max: priceRangeMax });
     resetPhotographerResults();
   };
@@ -483,6 +595,11 @@ export default function Home() {
   const handleDistrictChange = (e) => {
     setSelectedDistrict(e.target.value);
     setSelectedCity("");
+    resetPhotographerResults();
+  };
+
+  const handleAvailabilityDateChange = (date) => {
+    setSelectedAvailabilityDate(date);
     resetPhotographerResults();
   };
 
@@ -717,6 +834,7 @@ export default function Home() {
                 </option>
               ))}
             </select>
+            <AvailabilityDatePicker value={selectedAvailabilityDate} onChange={handleAvailabilityDateChange} />
           </div>
           <div className={styles.priceFilters}>
             <div className={styles.priceControl}>
@@ -770,6 +888,7 @@ export default function Home() {
                 !selectedDistrict &&
                 !selectedCity &&
                 !selectedDailyFeeRange
+                && !selectedAvailabilityDate
               }
             >
               Clear
@@ -807,7 +926,7 @@ export default function Home() {
           </>
         ) : (
           <p id="photographer-listings" className={styles.photographerState}>
-            {searchTerm.trim() || selectedDistrict || selectedCity
+            {searchTerm.trim() || selectedDistrict || selectedCity || selectedAvailabilityDate
               ? "No photographers match your search or filters."
               : "No photographer profiles are available yet."}
           </p>
